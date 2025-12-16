@@ -20,20 +20,21 @@ channels = [
     "https://repo.prefix.dev/modular-community",
 ]
 
-# [package.host-dependencies]
-# mojo-compiler = "=0.25.7"
+[package.host-dependencies]
+mojo-compiler = "=0.25.7"
 
-# [package.build-dependencies]
-# mojo-compiler = "=0.25.7"
+[package.build-dependencies]
+mojo-compiler = "=0.25.7"
+extramojo = "=0.19"
 
-# [package.run-dependencies]
-# mojo-compiler = "=0.25.7"
+[package.run-dependencies]
+mojo-compiler = "=0.25.7"
 
 [tasks]
 r = "mojo run main.mojo"
 
 [dependencies]
-mojo = "*"
-#mojo = "=0.25.7"
+mojo = "=0.25.7"
 #extramojo = {path = "../../../ExtraMojo"}
-# extramojo = "=0.19"
+extramojo = "=0.19"
+hat = { path = "." }

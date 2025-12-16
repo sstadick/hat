@@ -9,5 +9,5 @@ trait HatSubcommand:
         ...
 
     @staticmethod
-    fn run(var opts: ParsedOpts) raises:
+    fn run(var opts: ParsedOpts, read help_message: String) raises:
         ...
