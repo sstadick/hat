@@ -231,4 +231,7 @@ alias GITIGNORE_TEMPLATE = """
 # pixi environments
 .pixi/*
 !.pixi/config.toml
+
+# hat
+target/*
 """
