@@ -13,6 +13,7 @@ from sys.info import CompilationTarget
 from memory import Span
 
 
+# TODO: handle this but with the iterator now
 struct CompletedProcess(Copyable, Movable):
     """Result of a subprocess execution."""
 
@@ -34,8 +35,12 @@ struct CompletedProcess(Copyable, Movable):
             )
 
 
-struct _POpenHandle[mimic_tty: Bool = False]:
+struct _POpenHandle[mimic_tty: Bool = False](Iterable):
     """Handle to an open file descriptor opened via popen."""
+
+    alias IteratorType[
+        iterable_mut: Bool, //, iterable_origin: Origin[iterable_mut]
+    ]: Iterator = _LineIter[mimic_tty, iterable_origin]
 
     var _handle: FILE_ptr
     var _closed: Bool
@@ -82,7 +87,10 @@ struct _POpenHandle[mimic_tty: Bool = False]:
         # Extract the actual exit code
         return Int(status >> 8)
 
-    fn read(self) raises -> String:
+    fn __iter__(ref self) -> Self.IteratorType[origin_of(self)]:
+        return _LineIter[mimic_tty, origin_of(self)](Pointer(to=self))
+
+    fn read_all(self) raises -> String:
         """Reads all the data from the handle."""
         var len: Int = 0
         var line = UnsafePointer[c_char, MutOrigin.external]()
@@ -102,6 +110,55 @@ struct _POpenHandle[mimic_tty: Bool = False]:
         return String(res.rstrip())
 
 
+struct _LineIter[mut: Bool, //, mimic_tty: Bool, origin: Origin[mut]](Iterator):
+    # TODO: with new iterator return a reference to the bytes, or just anything that doesn't copy
+    alias Element = String
+
+    var _len: Int
+    var _line: UnsafePointer[c_char, MutOrigin.external]
+    var _handle: Pointer[_POpenHandle[mimic_tty], origin]
+
+    fn __init__(out self, handle: Pointer[_POpenHandle[mimic_tty], origin]):
+        self._line = UnsafePointer[c_char, MutOrigin.external]()
+        self._len = 0
+        self._handle = handle
+        self._try_getline()
+
+    fn __del__(deinit self):
+        libc.free(self._line.bitcast[NoneType]())
+        # The _POpenHandle that gave us this handle should close that.
+        # pclose(self._handle)
+
+    fn __has_next__(read self) -> Bool:
+        return self._len != -1
+
+    fn _try_getline(mut self):
+        var read = external_call["getline", Int](
+            Pointer(to=self._line),
+            Pointer(to=self._len),
+            self._handle[]._handle,
+        )
+        if read == -1:
+            self._len = -1
+        else:
+            self._len = read  # Store the actual bytes read
+
+    fn __next__(mut self) -> Self.Element:
+        # Current line data is in _line with length _len
+        var ret = String(
+            StringSlice(
+                unsafe_from_utf8=Span(
+                    ptr=self._line.bitcast[Byte](), length=self._len
+                )
+            )
+        )
+
+        # Try to read the next line for the next iteration
+        self._try_getline()
+
+        return ret^
+
+
 fn run[
     mimic_tty: Bool = False
 ](
@@ -119,6 +176,14 @@ fn run[
     var hdl = _POpenHandle[mimic_tty](
         cmd, capture_stderr_to_stdout=capture_stderr_to_stdout
     )
-    var output = hdl.read()
+    var output = hdl.read_all()
     var code = hdl.close()
     return CompletedProcess(output, code)
+
+
+# def main():
+#     var handle = _POpenHandle[True](
+#         "cat ./pixi.toml", capture_stderr_to_stdout=True
+#     )
+#     for ref line in handle:
+#         print(line)

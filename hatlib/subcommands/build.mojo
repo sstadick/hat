@@ -17,64 +17,8 @@ from extramojo.cli.parser import (
 )
 
 from hatlib.subcommands import HatSubcommand
-
-
-@always_inline
-fn _no_filter(path: Path) -> Bool:
-    return True
-
-
-fn walk_dir[
-    *, ignore_dot_files: Bool, filter: fn (Path) -> Bool = _no_filter
-](path: Path,) raises -> List[Path]:
-    """Walk dirs and collect all files.
-
-    Note that this uses a heap allocated queue instead of recursion.
-
-    Args:
-        path: The path to begin the search.
-
-    Returns:
-        A list of files in all dirs.
-
-    Paramaters:
-        ignore_dot_files: If True, skip all dot files and dot dirs.
-
-    """
-    var out = List[Path]()
-    var to_examine = Deque[Path](path)
-
-    while len(to_examine) > 0:
-        var check = to_examine.pop()
-        for path in check.listdir():
-            var child = check / path
-
-            @parameter
-            if ignore_dot_files:
-                if String(path).startswith("."):
-                    continue
-
-            if child.is_file() and filter(child):
-                out.append(child)
-            elif child.is_dir():
-                to_examine.append(child)
-    return out^
-
-
-fn get_project_name() raises -> String:
-    var fh = open(Path(".") / "pixi.toml", "r")
-    var lines = fh.read().splitlines()
-
-    var package_seen = False
-    for line in lines:
-        if line.startswith("[package]"):
-            package_seen = True
-        if package_seen and line.startswith("name"):
-            var quote_idx = line.find('"')
-            var name = line[quote_idx + 1 : len(line) - 1]  # -2 for "
-            return String(name)
-    else:
-        raise Error("Unable to find project name in pixi.toml")
+from hatlib.walk_dir import walk_dir
+from hatlib.project import get_project_name
 
 
 fn is_main(path: Path) -> Bool:
@@ -91,23 +35,6 @@ struct Build(HatSubcommand):
             name=Self.Name,
             description="""Build your project.""",
         )
-        # parser.add_opt(
-        #     OptConfig(
-        #         "name",
-        #         OptKind.StringLike,
-        #         description=(
-        #             "The name of the project, also used to create a directory."
-        #         ),
-        #     )
-        # )
-        # parser.add_opt(
-        #     OptConfig(
-        #         "location",
-        #         OptKind.StringLike,
-        #         description="Location to create the project",
-        #         default_value=String("."),
-        #     )
-        # )
         parser.add_opt(
             OptConfig(
                 "debug",
@@ -132,7 +59,7 @@ struct Build(HatSubcommand):
                 "--debug-level full --optimization-level 0 -D ASSERT=all"
             )
 
-        var project_name = get_project_name()
+        var project_name = get_project_name(Path("."))
 
         var mains = walk_dir[ignore_dot_files=True, filter=is_main](".")
 
@@ -162,14 +89,7 @@ struct Build(HatSubcommand):
             else:
                 raise Error("No valid mojopkg project structure found.")
 
-        # print("mains:", mains.__str__())
-        # Check for a main.mojo file in [top level, src, <proj_name>]
-        # mojo build -o target/release/<proj_name> main.mojo
-
-        # mojo package -o target/release/<proj_name>.mojopkg ./
-
-        # If Debug, turn on symbols tables and asserts, place build in debug target
-
+        # TODO: now iterate over the lines so we can print in a more "live" mode
         var result = run[mimic_tty=True](build_string)
         print(result.stdout)
         if result.returncode != 0:
