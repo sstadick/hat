@@ -14,6 +14,7 @@ from extramojo.cli.parser import (
 )
 
 from hatlib.subcommands import HatSubcommand
+from hatlib.subprocess import POpenHandle
 
 alias NIGHTLY_CHANNEL = "https://conda.modular.com/max-nightly"
 alias STABLE_CHANNEL = "https://conda.modular.com/max"
@@ -23,6 +24,22 @@ alias STABLE_CHANNEL = "https://conda.modular.com/max"
 struct UserInfo(Copyable, Movable):
     var username: String
     var email: String
+
+
+fn pixi_install(project_dir: Path) raises:
+    print("running in", project_dir)
+    var handle = POpenHandle[True](
+        "cd "
+        + String(project_dir)
+        + " && pixi install --manifest-path "
+        + String(project_dir / "pixi.toml")
+        + " --no-progress"
+    )
+    for line in handle:
+        print(line)
+    var retcode = handle.close()
+    if retcode != 0:
+        raise Error("Failed to install deps.")
 
 
 fn get_user_and_email(project_dir: Path) raises -> UserInfo:
@@ -152,6 +169,7 @@ struct New(HatSubcommand):
 
         # Git init and find user info
         _ = run("cd {} && git init".format(String(project_dir)))
+
         var user_info = get_user_and_email(project_dir)
 
         # Fill in `pixi.toml` template
@@ -163,6 +181,7 @@ struct New(HatSubcommand):
         else:
             create_bin_structure(project_dir)
         create_test_structure(project_dir)
+        pixi_install(project_dir)
 
 
 alias PIXI_TEMPLATE = """
@@ -181,12 +200,11 @@ name = "{}"
 version = "0.1.0"
 
 [package.build]
-backend = {{ name = "pixi-build-mojo", version = "0.*" }}
-channels = [
+backend = {{ name = "pixi-build-mojo", version = "0.*", channels = [
     "https://prefix.dev/pixi-build-backends",
     "https://prefix.dev/conda-forge",
     "https://repo.prefix.dev/modular-community",
-]
+] }}
 
 [package.host-dependencies]
 mojo-compiler = "0.*"

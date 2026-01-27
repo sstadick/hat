@@ -35,7 +35,7 @@ struct CompletedProcess(Copyable, Movable):
             )
 
 
-struct _POpenHandle[mimic_tty: Bool = False](Iterable):
+struct POpenHandle[mimic_tty: Bool = False](Iterable):
     """Handle to an open file descriptor opened via popen."""
 
     alias IteratorType[
@@ -116,9 +116,9 @@ struct _LineIter[mut: Bool, //, mimic_tty: Bool, origin: Origin[mut]](Iterator):
 
     var _len: Int
     var _line: UnsafePointer[c_char, MutOrigin.external]
-    var _handle: Pointer[_POpenHandle[mimic_tty], origin]
+    var _handle: Pointer[POpenHandle[mimic_tty], origin]
 
-    fn __init__(out self, handle: Pointer[_POpenHandle[mimic_tty], origin]):
+    fn __init__(out self, handle: Pointer[POpenHandle[mimic_tty], origin]):
         self._line = UnsafePointer[c_char, MutOrigin.external]()
         self._len = 0
         self._handle = handle
@@ -173,7 +173,7 @@ fn run[
     Returns:
         A CompletedProcess with stdout and returncode.
     """
-    var hdl = _POpenHandle[mimic_tty](
+    var hdl = POpenHandle[mimic_tty](
         cmd, capture_stderr_to_stdout=capture_stderr_to_stdout
     )
     var output = hdl.read_all()

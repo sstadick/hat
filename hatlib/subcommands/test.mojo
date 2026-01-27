@@ -2,7 +2,7 @@ from os import mkdir
 from pathlib import Path
 from sys import exit
 
-from hatlib.subprocess import run
+from hatlib.subprocess import POpenHandle
 
 from extramojo.io.buffered import BufferedReader
 from extramojo.cli.parser import (
@@ -35,9 +35,12 @@ struct Test(HatSubcommand):
             print(help_message)
             exit(0)
 
-        # TODO: Mimic the test command here better instead
         # t = {{ cmd = "script -q /dev/null sh -c 'find ./tests -name test_*.mojo | xargs -I % pixi run mojo run -I . -D ASSERT=all %' 2>&1" }}
-        var result = run[mimic_tty=True]("pixi run t 2>&1")
-        print(result.stdout)
-        if result.returncode != 0:
+        var handle = POpenHandle[True](
+            "pixi run --no-progress t", capture_stderr_to_stdout=True
+        )
+        for line in handle:
+            print(line)
+        var retcode = handle.close()
+        if retcode != 0:
             raise Error("Testing failed.")

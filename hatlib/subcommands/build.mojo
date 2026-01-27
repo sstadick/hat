@@ -4,7 +4,7 @@ from pathlib import Path
 from collections.deque import Deque
 from sys import exit
 
-from hatlib.subprocess import run
+from hatlib.subprocess import POpenHandle
 
 from extramojo.io.buffered import BufferedReader
 from extramojo.cli.parser import (
@@ -90,7 +90,14 @@ struct Build(HatSubcommand):
                 raise Error("No valid mojopkg project structure found.")
 
         # TODO: now iterate over the lines so we can print in a more "live" mode
-        var result = run[mimic_tty=True](build_string)
-        print(result.stdout)
-        if result.returncode != 0:
+        var handle = POpenHandle[True](build_string)
+        for line in handle:
+            print(line)
+        var retcode = handle.close()
+        if retcode != 0:
             raise Error("Build failed: " + build_string)
+
+        # var result = run[mimic_tty=True](build_string)
+        # print(result.stdout)
+        # if result.returncode != 0:
+        #     raise Error("Build failed: " + build_string)
