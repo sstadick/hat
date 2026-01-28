@@ -11,6 +11,8 @@ preview = ["pixi-build"]
 [package]
 name = "hat"
 version = "0.1.0"
+license = "MIT"
+description = "Helper utility for working with Mojo projects."
 
 [package.build]
 backend = { name = "pixi-build-mojo", version = "0.*" }
