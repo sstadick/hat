@@ -33,3 +33,8 @@ Note that this sets up a fully functioning pixi project under. There is no magic
 ## Future directions
 
 - Reduce reliance on pixi the cli tool, add bindings to the core pixi libs and call them directly.
+
+## TODOs
+
+- Publish on conda, add install section
+- Add CI and tests
