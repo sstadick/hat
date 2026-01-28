@@ -4,7 +4,7 @@ A thin wrapper over pixi to make common mojo related task easier.
 
 ## Usage
 
-```
+```bash
 # Create a new binary project
 hat new --name mojo-grep --nightly
 
