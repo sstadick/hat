@@ -1,4 +1,4 @@
-from os import mkdir
+from os import mkdir, makedirs
 from pathlib import Path
 from subprocess import run
 from sys import exit
@@ -56,7 +56,7 @@ fn pick_channel(nightly: Bool) -> String:
 
 
 fn create_lib_structure(project_dir: Path, name: String) raises:
-    mkdir(project_dir / name)
+    makedirs(project_dir / name, exist_ok=True)
     touch(project_dir / name / "__init__.mojo")
     var fh = open(project_dir / name / "lib.mojo", "w")
     fh.write_bytes(LIB_TEMPLATE.as_bytes())
