@@ -38,9 +38,9 @@ struct CompletedProcess(Copyable, Movable):
 struct POpenHandle[mimic_tty: Bool = False](Iterable):
     """Handle to an open file descriptor opened via popen."""
 
-    alias IteratorType[
-        iterable_mut: Bool, //, iterable_origin: Origin[iterable_mut]
-    ]: Iterator = _LineIter[mimic_tty, iterable_origin]
+    comptime IteratorType[
+        iterable_mut: Bool, //, iterable_origin: Origin[mut=iterable_mut]
+    ]: Iterator = _LineIter[Self.mimic_tty, iterable_origin]
 
     var _handle: FILE_ptr
     var _closed: Bool
@@ -59,7 +59,7 @@ struct POpenHandle[mimic_tty: Bool = False](Iterable):
             full_cmd = cmd + " 2>&1"
 
         @parameter
-        if mimic_tty:
+        if Self.mimic_tty:
             if CompilationTarget.is_macos():
                 full_cmd = "script -q /dev/null " + full_cmd
             else:
@@ -88,7 +88,7 @@ struct POpenHandle[mimic_tty: Bool = False](Iterable):
         return Int(status >> 8)
 
     fn __iter__(ref self) -> Self.IteratorType[origin_of(self)]:
-        return _LineIter[mimic_tty, origin_of(self)](Pointer(to=self))
+        return _LineIter[Self.mimic_tty, origin_of(self)](Pointer(to=self))
 
     fn read_all(self) raises -> String:
         """Reads all the data from the handle."""
@@ -110,16 +110,16 @@ struct POpenHandle[mimic_tty: Bool = False](Iterable):
         return String(res.rstrip())
 
 
-struct _LineIter[mut: Bool, //, mimic_tty: Bool, origin: Origin[mut]](Iterator):
+struct _LineIter[mut: Bool, //, mimic_tty: Bool, origin: Origin[mut=mut]](Iterator):
     # TODO: with new iterator return a reference to the bytes, or just anything that doesn't copy
-    alias Element = String
+    comptime Element = String
 
     var _len: Int
-    var _line: UnsafePointer[c_char, MutOrigin.external]
-    var _handle: Pointer[POpenHandle[mimic_tty], origin]
+    var _line: UnsafePointer[c_char, MutExternalOrigin]
+    var _handle: Pointer[POpenHandle[Self.mimic_tty], Self.origin]
 
-    fn __init__(out self, handle: Pointer[POpenHandle[mimic_tty], origin]):
-        self._line = UnsafePointer[c_char, MutOrigin.external]()
+    fn __init__(out self, handle: Pointer[POpenHandle[Self.mimic_tty], Self.origin]):
+        self._line = UnsafePointer[c_char, MutExternalOrigin]()
         self._len = 0
         self._handle = handle
         self._try_getline()

@@ -19,7 +19,7 @@ from hatlib.subcommands import HatSubcommand
 
 @fieldwise_init
 struct Test(HatSubcommand):
-    alias Name = "test"
+    comptime Name = "test"
 
     @staticmethod
     fn create_subcommand() raises -> Subcommand:

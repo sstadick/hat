@@ -27,7 +27,7 @@ fn is_main(path: Path) -> Bool:
 
 @fieldwise_init
 struct Build(HatSubcommand):
-    alias Name = "build"
+    comptime Name = "build"
 
     @staticmethod
     fn create_subcommand() raises -> Subcommand:
@@ -73,23 +73,28 @@ struct Build(HatSubcommand):
             if len(mains) != 1:
                 raise Error("Conflicting main.mojo files found.")
             var binary = build_dir / project_name
-            build_string = "pixi run mojo build {} -o {} {}".format(
-                debug_string, String(binary), String(mains[0])
+            build_string = (
+                "pixi run --no-progress mojo build {} -o {} {}".format(
+                    debug_string, String(binary), String(mains[0])
+                )
             )
         else:
             var pkg = build_dir / "{}.mojopkg".format(project_name)
             if (Path(".") / project_name).exists():
-                build_string = "pixi run mojo package -o {} {}".format(
-                    String(pkg), project_name
+                build_string = (
+                    "pixi run --no-progress mojo package -o {} {}".format(
+                        String(pkg), project_name
+                    )
                 )
             elif (Path(".") / "src").exists():
-                build_string = "pixi run mojo package -o {} src".format(
-                    String(pkg),
+                build_string = (
+                    "pixi run --no-progress mojo package -o {} src".format(
+                        String(pkg),
+                    )
                 )
             else:
                 raise Error("No valid mojopkg project structure found.")
 
-        # TODO: now iterate over the lines so we can print in a more "live" mode
         var handle = POpenHandle[True](build_string)
         for line in handle:
             print(line)

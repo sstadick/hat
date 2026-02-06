@@ -12,11 +12,6 @@ def main():
         name="hat", description="An accessory build tool for mojo."
     )
 
-    var commands = {
-        New.Name: New.run,
-        Test.Name: Test.run,
-        Build.Name: Build.run,
-    }
     parser.add_command(New.create_subcommand())
     parser.add_command(Test.create_subcommand())
     parser.add_command(Build.create_subcommand())
@@ -33,9 +28,12 @@ def main():
     if opts.get_bool("help"):
         print(parser.get_help_message())
 
-    var runner = commands.get(parsed_cmd)
-    if not runner:
+    if parsed_cmd == New.Name:
+        New.run(opts^, parser.commands[parsed_cmd].parser.help_msg())
+    elif parsed_cmd == Test.Name:
+        Test.run(opts^, parser.commands[parsed_cmd].parser.help_msg())
+    elif parsed_cmd == Build.Name:
+        Build.run(opts^, parser.commands[parsed_cmd].parser.help_msg())
+    else:
         print("Invalid subcommand ", parsed_cmd)
         exit(1)
-
-    runner.value()(opts^, parser.commands[parsed_cmd].parser.help_msg())

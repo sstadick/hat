@@ -2,7 +2,7 @@ from extramojo.cli.parser import ParsedOpts, Subcommand
 
 
 trait HatSubcommand:
-    alias Name: String
+    comptime Name: String
 
     @staticmethod
     fn create_subcommand() raises -> Subcommand:

@@ -16,8 +16,8 @@ from extramojo.cli.parser import (
 from hatlib.subcommands import HatSubcommand
 from hatlib.subprocess import POpenHandle
 
-alias NIGHTLY_CHANNEL = "https://conda.modular.com/max-nightly"
-alias STABLE_CHANNEL = "https://conda.modular.com/max"
+comptime NIGHTLY_CHANNEL = "https://conda.modular.com/max-nightly"
+comptime STABLE_CHANNEL = "https://conda.modular.com/max"
 
 
 @fieldwise_init
@@ -99,7 +99,7 @@ fn write_pixi_toml(
 
 @fieldwise_init
 struct New(HatSubcommand):
-    alias Name = "new"
+    comptime Name = "new"
 
     @staticmethod
     fn create_subcommand() raises -> Subcommand:
@@ -184,7 +184,7 @@ struct New(HatSubcommand):
         pixi_install(project_dir)
 
 
-alias PIXI_TEMPLATE = """
+comptime PIXI_TEMPLATE = """
 [workspace]
 authors = ["{} <{}>"]
 channels = [
@@ -225,17 +225,17 @@ mojo = "0.*"
 {} = {{ path = "." }}
 """
 
-alias MAIN_TEMPLATE = """
+comptime MAIN_TEMPLATE = """
 def main():
     print("🎩🪄🐇")
 """
 
-alias LIB_TEMPLATE = """
+comptime LIB_TEMPLATE = """
 fn pull_rabbit() -> String:
     return "🐇"
 """
 
-alias TEST_TEMPLATE = """
+comptime TEST_TEMPLATE = """
 from testing import assert_equal, TestSuite
 
 def test_example():
@@ -245,7 +245,7 @@ def main():
     TestSuite.discover_tests[__functions_in_module()]().run()
 """
 
-alias GITIGNORE_TEMPLATE = """
+comptime GITIGNORE_TEMPLATE = """
 # pixi environments
 .pixi/*
 !.pixi/config.toml
