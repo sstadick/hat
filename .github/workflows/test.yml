@@ -26,3 +26,18 @@ jobs:
               run: |
                   export PATH="/home/runner/.pixi/bin:$PATH"
                   hat --help
+
+            - name: Run basic test - hat test 
+              run: |
+                  export PATH="/home/runner/.pixi/bin:$PATH"
+                  hat test
+
+            - name: Run basic test - hat build
+              run: |
+                  export PATH="/home/runner/.pixi/bin:$PATH"
+                  hat build
+
+            - name: Run basic test - hat new
+              run: |
+                  export PATH="/home/runner/.pixi/bin:$PATH"
+                  hat new --name example
