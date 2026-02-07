@@ -31,9 +31,7 @@ fn pixi_install(project_dir: Path) raises:
     var handle = POpenHandle[True](
         "cd "
         + String(project_dir)
-        + " && pixi install --manifest-path "
-        + String(project_dir / "pixi.toml")
-        + " --no-progress"
+        + " && pixi install --no-progress"
     )
     for line in handle:
         print(line)
