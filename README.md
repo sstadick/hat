@@ -34,7 +34,10 @@ hat build --debug
 hat test
 ```
 
-Note that this sets up a fully functioning pixi project under. There is no magic here, you can look at the pixi.toml and fall back to running pixi / mojo commands as needed. 
+Note that this sets up a fully functioning pixi project that relies on the ['pixi-build-mojo`](https://prefix-dev.github.io/pixi-build-backends/backends/pixi-build-mojo) backend. There is no magic here, you can look at the pixi.toml and fall back to running pixi / mojo commands as needed. 
+
+
+Libraries and packages created this way can be relied on via git paths and don't technically need to be published on conda to be used by others. If you do wish to publish on [modular-community](https://github.com/modular/modular-community) you will need to create recipe.yml and go through the steps outlined in that repo. (Automatic creation of the recipe file is on the roadmap for this tool).
 
 > [!Warning]
 > Since `hat` relies on the pixi.toml, and some task defined there, changing any of the pre-defined tasks may break `hat`.
@@ -50,3 +53,5 @@ Note that this sets up a fully functioning pixi project under. There is no magic
 ## TODOs
 
 - Add CI and tests
+- Add a `generate-recipe` subcommand to export a recipe that can be used for rattler
+- Add some ENV VARS to the build env that `hat` uses such as project version, project name, etc by parsing the pixi toml file. This allows CLI tools to pull those in at comptime.
