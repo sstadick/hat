@@ -19,7 +19,7 @@ def main():
     var cmd_and_opts = parser.parse_sys_args()
     if not cmd_and_opts:
         print(parser.get_help_message())
-        exit(1)
+        exit(0)
 
     var parsed = cmd_and_opts.value()
     var parsed_cmd = parsed[0]

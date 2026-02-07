@@ -33,6 +33,7 @@ mojo-compiler = "=0.26.1"
 
 [tasks]
 r = "mojo run main.mojo"
+t = { cmd = "script -q /dev/null sh -c 'find ./tests -name test_*.mojo | xargs -I % pixi run mojo run -I . -D ASSERT=all %' 2>&1" }
 
 [dependencies]
 mojo = "=0.26.1"
