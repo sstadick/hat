@@ -37,7 +37,7 @@ jobs:
                   export PATH="/home/runner/.pixi/bin:$PATH"
                   hat build
 
-            - name: Run basic test - hat new
+            - name: Run end to end test
               run: |
                   export PATH="/home/runner/.pixi/bin:$PATH"
-                  hat new --name example
+                  hat new --name example && cd example && hat build && hat test
