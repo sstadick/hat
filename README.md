@@ -2,6 +2,19 @@
 
 A thin wrapper over pixi to make common mojo related task easier.
 
+## Install
+
+```
+pixi global install \
+  --channel conda-forge \
+  --channel https://conda.modular.com/max-nightly \
+  --channel https://repo.prefix.dev/modular-community \
+  --git https://github.com/sstadick/hat
+
+# Add the pixi dir to your path
+export PATH="$HOME/.pixi/bin:$PATH"
+```
+
 ## Usage
 
 ```bash
@@ -36,5 +49,4 @@ Note that this sets up a fully functioning pixi project under. There is no magic
 
 ## TODOs
 
-- Publish on conda, add install section
 - Add CI and tests

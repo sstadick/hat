@@ -105,11 +105,8 @@ struct New(HatSubcommand):
     fn create_subcommand() raises -> Subcommand:
         var parser = OptParser(
             name=Self.Name,
-            description="""
-            Create a new Mojo project.
-
-            For further documentation on Mojo project structure, see https://prefix-dev.github.io/pixi-build-backends/backends/pixi-build-mojo/#project-structure-examples.
-            """,
+            description="""Create a new Mojo project.
+            For further documentation on Mojo project structure, see https://prefix-dev.github.io/pixi-build-backends/backends/pixi-build-mojo/#project-structure-examples.""",
         )
         parser.add_opt(
             OptConfig(

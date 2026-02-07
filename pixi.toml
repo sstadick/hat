@@ -15,13 +15,12 @@ license = "MIT"
 description = "Helper utility for working with Mojo projects."
 
 [package.build]
-backend = { name = "pixi-build-mojo", version = "0.*" }
-channels = [
+backend = { name = "pixi-build-mojo", version = "0.*", channels = [
     "https://prefix.dev/pixi-build-backends",
     "https://prefix.dev/conda-forge",
     "https://repo.prefix.dev/modular-community",
     "https://conda.modular.com/max-nightly",
-]
+] }
 
 [package.host-dependencies]
 mojo-compiler = "=0.26.1"
