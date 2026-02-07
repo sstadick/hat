@@ -2,7 +2,7 @@ from os import mkdir, makedirs
 from os.path import basename
 from pathlib import Path
 from collections.deque import Deque
-from sys import exit
+from sys import exit, stderr
 
 from hatlib.subprocess import POpenHandle
 
@@ -69,6 +69,7 @@ struct Build(HatSubcommand):
         makedirs(build_dir, exist_ok=True)
 
         var build_string: String
+        var location: String
         if len(mains) > 0:
             if len(mains) != 1:
                 raise Error("Conflicting main.mojo files found.")
@@ -78,8 +79,10 @@ struct Build(HatSubcommand):
                     debug_string, String(binary), String(mains[0])
                 )
             )
+            location = String(binary)
         else:
             var pkg = build_dir / "{}.mojopkg".format(project_name)
+            location = String(pkg)
             if (Path(".") / project_name).exists():
                 build_string = (
                     "pixi run --no-progress mojo package -o {} {}".format(
@@ -95,9 +98,11 @@ struct Build(HatSubcommand):
             else:
                 raise Error("No valid mojopkg project structure found.")
 
+        print("Running:", build_string, file=stderr)
         var handle = POpenHandle[True](build_string)
         for line in handle:
             print(line)
+        print("Build complete:", location, file=stderr)
         var retcode = handle.close()
         if retcode != 0:
             raise Error("Build failed: " + build_string)
