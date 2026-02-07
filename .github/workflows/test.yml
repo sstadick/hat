@@ -16,7 +16,11 @@ jobs:
             - name: Install dependencies and build
               run: |
                   export PATH="/home/runner/.pixi/bin:$PATH"
-                  pixi global install --path .
+                  pixi global install \
+                      --channel conda-forge \
+                      --channel https://conda.modular.com/max-nightly \
+                      --channel https://repo.prefix.dev/modular-community \
+                      --path .
 
             - name: Run basic test - hat --help
               run: |
