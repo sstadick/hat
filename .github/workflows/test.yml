@@ -45,4 +45,4 @@ jobs:
             - name: Run end to end test
               run: |
                   export PATH="/home/runner/.pixi/bin:$PATH"
-                  hat new --name example && cd example && hat build && hat test
+                  hat new --name example && cd example && hat build && hat test && ./target/release/example
