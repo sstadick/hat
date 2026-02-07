@@ -16,7 +16,7 @@ jobs:
             - name: Install dependencies and build
               run: |
                   export PATH="/home/runner/.pixi/bin:$PATH"
-                  pixi global install --locked --path .
+                  pixi global install --path .
 
             - name: Run basic test - hat --help
               run: |
