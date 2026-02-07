@@ -19,7 +19,6 @@ backend = { name = "pixi-build-mojo", version = "0.*", channels = [
     "https://prefix.dev/pixi-build-backends",
     "https://prefix.dev/conda-forge",
     "https://repo.prefix.dev/modular-community",
-    "https://conda.modular.com/max-nightly",
 ] }
 
 [package.host-dependencies]
