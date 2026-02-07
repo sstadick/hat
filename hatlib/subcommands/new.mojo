@@ -214,7 +214,7 @@ mojo-compiler = "0.*"
 
 [tasks]
 r = "mojo run main.mojo"
-t = {{ cmd = "script -q /dev/null sh -c 'find ./tests -name test_*.mojo | xargs -I % pixi run mojo run -I . -D ASSERT=all %' 2>&1" }}
+t = {{ cmd = "sh -c 'find ./tests -name test_*.mojo | xargs -I % mojo run -I . -D ASSERT=all %'" }}
 
 
 [dependencies]
