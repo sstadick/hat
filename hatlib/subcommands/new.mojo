@@ -236,7 +236,7 @@ comptime TEST_TEMPLATE = """
 from testing import assert_equal, TestSuite
 
 def test_example():
-    assert_equal("🎩", "🐇")
+    assert_equal("🎩", "🎩")
 
 def main():
     TestSuite.discover_tests[__functions_in_module()]().run()
