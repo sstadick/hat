@@ -31,9 +31,7 @@ fn pixi_install(project_dir: Path) raises:
     var handle = POpenHandle[True](
         "cd "
         + String(project_dir)
-        + " && pixi install --manifest-path "
-        + String(project_dir / "pixi.toml")
-        + " --no-progress"
+        + " && pixi install --no-progress"
     )
     for line in handle:
         print(line)
@@ -214,7 +212,7 @@ mojo-compiler = "0.*"
 
 [tasks]
 r = "mojo run main.mojo"
-t = {{ cmd = "script -q /dev/null sh -c 'find ./tests -name test_*.mojo | xargs -I % pixi run mojo run -I . -D ASSERT=all %' 2>&1" }}
+t = {{ cmd = "sh -c 'find ./tests -name test_*.mojo | xargs -I % mojo run -I . -D ASSERT=all %'" }}
 
 
 [dependencies]
@@ -236,7 +234,7 @@ comptime TEST_TEMPLATE = """
 from testing import assert_equal, TestSuite
 
 def test_example():
-    assert_equal("🎩", "🐇")
+    assert_equal("🎩", "🎩")
 
 def main():
     TestSuite.discover_tests[__functions_in_module()]().run()

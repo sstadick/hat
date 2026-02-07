@@ -52,6 +52,5 @@ Libraries and packages created this way can be relied on via git paths and don't
 
 ## TODOs
 
-- Add CI and tests
 - Add a `generate-recipe` subcommand to export a recipe that can be used for rattler
 - Add some ENV VARS to the build env that `hat` uses such as project version, project name, etc by parsing the pixi toml file. This allows CLI tools to pull those in at comptime.

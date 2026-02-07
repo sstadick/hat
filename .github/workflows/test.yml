@@ -1,0 +1,48 @@
+name: Test
+on: [push, pull_request]
+jobs:
+    test:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Install pixi CLI
+              run: |
+                  curl -fsSL https://pixi.sh/install.sh | sh
+                  export PATH="/home/runner/.pixi/bin:$PATH"
+
+            - name: Install dependencies and build
+              run: |
+                  export PATH="/home/runner/.pixi/bin:$PATH"
+                  pixi global install \
+                      --channel conda-forge \
+                      --channel https://conda.modular.com/max-nightly \
+                      --channel https://repo.prefix.dev/modular-community \
+                      --path .
+
+            - name: Run basic test - hat --help
+              run: |
+                  export PATH="/home/runner/.pixi/bin:$PATH"
+                  hat --help
+
+            - name: Run basic test - hat test 
+              run: |
+                  export PATH="/home/runner/.pixi/bin:$PATH"
+                  hat test
+
+            - name: Run basic test - hat build
+              run: |
+                  export PATH="/home/runner/.pixi/bin:$PATH"
+                  hat build
+
+            - name: Configure git for testing
+              run: |
+                  git config --global user.email "ci@example.com"
+                  git config --global user.name "CI Bot"
+
+            - name: Run end to end test
+              run: |
+                  export PATH="/home/runner/.pixi/bin:$PATH"
+                  hat new --name example && cd example && hat build && hat test && ./target/release/example
