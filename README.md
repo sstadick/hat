@@ -40,7 +40,7 @@ Note that this sets up a fully functioning pixi project that relies on the ['pix
 Libraries and packages created this way can be relied on via git paths and don't technically need to be published on conda to be used by others. If you do wish to publish on [modular-community](https://github.com/modular/modular-community) you will need to create recipe.yml and go through the steps outlined in that repo. (Automatic creation of the recipe file is on the roadmap for this tool).
 
 > [!Warning]
-> Since `hat` relies on the pixi.toml, and some task defined there, changing any of the pre-defined tasks may break `hat`.
+> Since `hat` relies on the pixi.toml, and some tasks defined there, changing any of the pre-defined tasks may break `hat`.
 
 ## Known issues
 
