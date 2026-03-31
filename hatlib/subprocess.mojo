@@ -67,8 +67,8 @@ struct POpenHandle[mimic_tty: Bool = False](Iterable):
                 full_cmd = "script -qec '" + full_cmd + "' /dev/null"
 
         self._handle = popen(
-            full_cmd.unsafe_cstr_ptr(),
-            mode.unsafe_cstr_ptr(),
+            full_cmd.as_c_string_slice().unsafe_ptr(),
+            mode.as_c_string_slice().unsafe_ptr(),
         )
         self._closed = False
         if not self._handle:
