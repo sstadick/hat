@@ -1,6 +1,6 @@
-from os import mkdir
-from pathlib import Path
-from sys import exit
+from std.os import mkdir
+from std.pathlib import Path
+from std.sys import exit
 
 from hatlib.subprocess import POpenHandle
 

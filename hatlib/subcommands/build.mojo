@@ -1,8 +1,8 @@
-from os import mkdir, makedirs
-from os.path import basename
-from pathlib import Path
-from collections.deque import Deque
-from sys import exit, stderr
+from std.os import mkdir, makedirs
+from std.os.path import basename
+from std.pathlib import Path
+from std.collections.deque import Deque
+from std.sys import exit, stderr
 
 from hatlib.subprocess import POpenHandle
 

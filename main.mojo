@@ -1,4 +1,4 @@
-from sys import exit
+from std.sys import exit
 
 from extramojo.cli.parser import OptParser, OptConfig, OptKind, SubcommandParser
 
@@ -7,7 +7,7 @@ from hatlib.subcommands.new import New
 from hatlib.subcommands.test import Test
 
 
-def main():
+def main() raises:
     var parser = SubcommandParser(
         name="hat", description="An accessory build tool for mojo."
     )
@@ -21,7 +21,7 @@ def main():
         print(parser.get_help_message())
         exit(0)
 
-    var parsed = cmd_and_opts.value()
+    var parsed = cmd_and_opts.value().copy()
     var parsed_cmd = parsed[0]
     var opts = parsed[1].copy()
 

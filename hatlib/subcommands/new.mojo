@@ -1,7 +1,8 @@
-from os import mkdir, makedirs
-from pathlib import Path
-from subprocess import run
-from sys import exit
+from std.os import mkdir, makedirs
+from std.pathlib import Path
+from std.subprocess import run
+from std.sys import exit
+
 
 from extramojo.io.buffered import BufferedReader
 from extramojo.cli.parser import (

@@ -4,13 +4,11 @@ Modified version of https://github.com/modular/modular/blob/65301d9c24fab2245dbe
 """
 
 
-import sys._libc as libc
-from sys import external_call
-from sys._libc import FILE_ptr, pclose, popen
-from sys.ffi import c_char
-from sys.info import CompilationTarget
-
-from memory import Span
+import std.sys._libc as libc
+from std.sys._libc import FILE_ptr, pclose, popen
+from std.ffi import c_char, external_call
+from std.sys.info import CompilationTarget
+from std.memory import Span
 
 
 # TODO: handle this but with the iterator now
@@ -20,11 +18,11 @@ struct CompletedProcess(Copyable, Movable):
     var stdout: String
     var returncode: Int
 
-    fn __init__(out self, stdout: String = "", returncode: Int = 0):
+    def __init__(out self, stdout: String = "", returncode: Int = 0):
         self.stdout = stdout
         self.returncode = returncode
 
-    fn check(self) raises:
+    def check(self) raises:
         """Raises an error if the process exited with a non-zero status."""
         if self.returncode != 0:
             raise Error(
@@ -45,7 +43,7 @@ struct POpenHandle[mimic_tty: Bool = False](Iterable):
     var _handle: FILE_ptr
     var _closed: Bool
 
-    fn __init__(
+    def __init__(
         out self,
         var cmd: String,
         var mode: String = "r",
@@ -58,28 +56,27 @@ struct POpenHandle[mimic_tty: Bool = False](Iterable):
         if capture_stderr_to_stdout:
             full_cmd = cmd + " 2>&1"
 
-        @parameter
-        if Self.mimic_tty:
-            if CompilationTarget.is_macos():
+        comptime if Self.mimic_tty:
+            comptime if CompilationTarget.is_macos():
                 full_cmd = "script -q /dev/null " + full_cmd
             else:
                 full_cmd = full_cmd.replace("'", "'\"'\"'")
                 full_cmd = "script -qec '" + full_cmd + "' /dev/null"
 
         self._handle = popen(
-            full_cmd.unsafe_cstr_ptr(),
-            mode.unsafe_cstr_ptr(),
+            full_cmd.as_c_string_slice().unsafe_ptr(),
+            mode.as_c_string_slice().unsafe_ptr(),
         )
         self._closed = False
         if not self._handle:
             raise Error("unable to execute the command `", cmd, "`")
 
-    fn __del__(deinit self):
+    def __del__(deinit self):
         """Closes the handle if not already closed."""
         if not self._closed:
             _ = pclose(self._handle)
 
-    fn close(mut self) -> Int:
+    def close(mut self) -> Int:
         """Closes the handle and returns the exit status."""
         self._closed = True
         var status = pclose(self._handle)
@@ -87,10 +84,10 @@ struct POpenHandle[mimic_tty: Bool = False](Iterable):
         # Extract the actual exit code
         return Int(status >> 8)
 
-    fn __iter__(ref self) -> Self.IteratorType[origin_of(self)]:
+    def __iter__(ref self) -> Self.IteratorType[origin_of(self)]:
         return _LineIter[Self.mimic_tty, origin_of(self)](Pointer(to=self))
 
-    fn read_all(self) raises -> String:
+    def read_all(self) raises -> String:
         """Reads all the data from the handle."""
         var len: Int = 0
         var line = UnsafePointer[c_char, MutOrigin.external]()
@@ -118,21 +115,21 @@ struct _LineIter[mut: Bool, //, mimic_tty: Bool, origin: Origin[mut=mut]](Iterat
     var _line: UnsafePointer[c_char, MutExternalOrigin]
     var _handle: Pointer[POpenHandle[Self.mimic_tty], Self.origin]
 
-    fn __init__(out self, handle: Pointer[POpenHandle[Self.mimic_tty], Self.origin]):
+    def __init__(out self, handle: Pointer[POpenHandle[Self.mimic_tty], Self.origin]):
         self._line = UnsafePointer[c_char, MutExternalOrigin]()
         self._len = 0
         self._handle = handle
         self._try_getline()
 
-    fn __del__(deinit self):
+    def __del__(deinit self):
         libc.free(self._line.bitcast[NoneType]())
         # The _POpenHandle that gave us this handle should close that.
         # pclose(self._handle)
 
-    fn __has_next__(read self) -> Bool:
+    def __has_next__(read self) -> Bool:
         return self._len != -1
 
-    fn _try_getline(mut self):
+    def _try_getline(mut self):
         var read = external_call["getline", Int](
             Pointer(to=self._line),
             Pointer(to=self._len),
@@ -143,7 +140,7 @@ struct _LineIter[mut: Bool, //, mimic_tty: Bool, origin: Origin[mut=mut]](Iterat
         else:
             self._len = read  # Store the actual bytes read
 
-    fn __next__(mut self) -> Self.Element:
+    def __next__(mut self) -> Self.Element:
         # Current line data is in _line with length _len
         var ret = String(
             StringSlice(
@@ -159,7 +156,7 @@ struct _LineIter[mut: Bool, //, mimic_tty: Bool, origin: Origin[mut=mut]](Iterat
         return ret^
 
 
-fn run[
+def run[
     mimic_tty: Bool = False
 ](
     cmd: String, capture_stderr_to_stdout: Bool = True
