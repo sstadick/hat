@@ -222,22 +222,22 @@ mojo = "0.*"
 """
 
 comptime MAIN_TEMPLATE = """
-def main():
+def main() raises:
     print("🎩🪄🐇")
 """
 
 comptime LIB_TEMPLATE = """
-fn pull_rabbit() -> String:
+def pull_rabbit() -> String:
     return "🐇"
 """
 
 comptime TEST_TEMPLATE = """
-from testing import assert_equal, TestSuite
+from std.testing import assert_equal, TestSuite
 
-def test_example():
+def test_example() raises:
     assert_equal("🎩", "🎩")
 
-def main():
+def main() raises:
     TestSuite.discover_tests[__functions_in_module()]().run()
 """
 
