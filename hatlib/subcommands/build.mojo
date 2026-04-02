@@ -10,7 +10,6 @@ from extramojo.io.buffered import BufferedReader
 from mojopt.command import Commandable
 from mojopt.default import reflection_default
 from mojopt.deserialize import MojOptDeserializable, Opt
-from mojopt.parser import Parser
 
 from hatlib.subcommands import HatSubcommand
 from hatlib.walk_dir import walk_dir
@@ -84,11 +83,11 @@ struct Build(Commandable, Defaultable, MojOptDeserializable, Writable):
         print("Running:", build_string, file=stderr)
         var handle = POpenHandle[True](build_string)
         for line in handle:
-            print(line)
-        print("Build complete:", location, file=stderr)
+            print(line, end="")
         var retcode = handle.close()
         if retcode != 0:
             raise Error("Build failed: " + build_string)
+        print("Build complete:", location, file=stderr)
 
         # var result = run[mimic_tty=True](build_string)
         # print(result.stdout)

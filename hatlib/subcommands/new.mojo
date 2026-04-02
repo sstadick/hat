@@ -31,12 +31,12 @@ struct UserInfo(Copyable, Movable):
 
 
 def pixi_install(project_dir: Path) raises:
-    print("running in", project_dir)
-    var handle = POpenHandle[True](
-        "cd " + String(project_dir) + " && pixi install --no-progress"
+    var cmd = String(
+        t"pixi install --no-progress --manifest-path {project_dir}/pixi.toml"
     )
+    var handle = POpenHandle[True](cmd)
     for line in handle:
-        print(line)
+        print(line, end="")
     var retcode = handle.close()
     if retcode != 0:
         raise Error("Failed to install deps.")
@@ -122,9 +122,15 @@ struct New(Commandable, Defaultable, MojOptDeserializable, Writable):
         help="Location to create the project",
     ]
     var nightly: Opt[
-        Bool, help="Create a project relying on latest nightly mojo."
+        Bool,
+        help="Create a project relying on latest nightly mojo.",
+        default_value=["False"],
     ]
-    var lib: Opt[Bool, help="Create a project structure for a mojo library."]
+    var lib: Opt[
+        Bool,
+        help="Create a project structure for a mojo library.",
+        default_value=["False"],
+    ]
 
     def run(self) raises:
         var channel = pick_channel(self.nightly.value)
@@ -137,7 +143,7 @@ struct New(Commandable, Defaultable, MojOptDeserializable, Writable):
             mkdir(project_dir / self.project_name.value)
 
         # Git init and find user info
-        _ = run("cd {} && git init".format(String(project_dir)))
+        _ = run("git init {}".format(String(project_dir)))
 
         var user_info = get_user_and_email(project_dir)
 

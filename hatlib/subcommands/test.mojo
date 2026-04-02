@@ -26,7 +26,7 @@ struct Test(Commandable, Defaultable, MojOptDeserializable, Writable):
             "pixi run --no-progress t", capture_stderr_to_stdout=True
         )
         for line in handle:
-            print(line.rstrip())
+            print(line, end="")
         var retcode = handle.close()
         if retcode != 0:
             raise Error("Testing failed.")
