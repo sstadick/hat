@@ -11,7 +11,7 @@ def _no_filter(path: Path) -> Bool:
 
 
 def walk_dir[
-    *, ignore_dot_files: Bool, filter: fn (Path) -> Bool = _no_filter
+    *, ignore_dot_files: Bool, filter: fn(Path) -> Bool = _no_filter
 ](path: Path,) raises -> List[Path]:
     """Walk dirs and collect all files.
 

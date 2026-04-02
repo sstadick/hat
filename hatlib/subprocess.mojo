@@ -107,7 +107,9 @@ struct POpenHandle[mimic_tty: Bool = False](Iterable):
         return String(res.rstrip())
 
 
-struct _LineIter[mut: Bool, //, mimic_tty: Bool, origin: Origin[mut=mut]](Iterator):
+struct _LineIter[mut: Bool, //, mimic_tty: Bool, origin: Origin[mut=mut]](
+    Iterator
+):
     # TODO: with new iterator return a reference to the bytes, or just anything that doesn't copy
     comptime Element = String
 
@@ -115,7 +117,9 @@ struct _LineIter[mut: Bool, //, mimic_tty: Bool, origin: Origin[mut=mut]](Iterat
     var _line: UnsafePointer[c_char, MutExternalOrigin]
     var _handle: Pointer[POpenHandle[Self.mimic_tty], Self.origin]
 
-    def __init__(out self, handle: Pointer[POpenHandle[Self.mimic_tty], Self.origin]):
+    def __init__(
+        out self, handle: Pointer[POpenHandle[Self.mimic_tty], Self.origin]
+    ):
         self._line = UnsafePointer[c_char, MutExternalOrigin]()
         self._len = 0
         self._handle = handle

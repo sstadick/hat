@@ -23,7 +23,7 @@ fn get_project_name(project_dir: Path) raises -> String:
             package_seen = True
         if package_seen and line.startswith("name"):
             var quote_idx = line.find('"')
-            var name = line[byte=quote_idx + 1 : len(line) - 1]  # -2 for "
+            var name = line[byte = quote_idx + 1 : len(line) - 1]  # -2 for "
             return String(name)
     else:
         raise Error("Unable to find project name in pixi.toml")

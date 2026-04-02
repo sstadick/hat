@@ -27,6 +27,7 @@ mojo-compiler = "=0.26.2"
 [package.build-dependencies]
 mojo-compiler = "=0.26.2"
 extramojo = {git = "https://github.com/ExtraMojo/ExtraMojo"}
+mojopt = {git="https://github.com/sstadick/mojopt", rev="32270c08d001c58ae1e4274b13d15c1dd7af166b"}
 
 [package.run-dependencies]
 mojo-compiler = "=0.26.2"
@@ -38,5 +39,6 @@ t = { cmd = "sh -c 'find ./tests -name test_*.mojo | xargs -I % mojo run -I . -D
 [dependencies]
 mojo = "=0.26.2"
 extramojo = {git = "https://github.com/ExtraMojo/ExtraMojo"}
+mojopt = {git="https://github.com/sstadick/mojopt", rev="32270c08d001c58ae1e4274b13d15c1dd7af166b"} 
 #extramojo = "=0.21.1"
-hat = { path = "." }
+#hat = { path = "." }

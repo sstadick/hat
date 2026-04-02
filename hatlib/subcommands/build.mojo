@@ -7,52 +7,35 @@ from std.sys import exit, stderr
 from hatlib.subprocess import POpenHandle
 
 from extramojo.io.buffered import BufferedReader
-from extramojo.cli.parser import (
-    OptParser,
-    OptConfig,
-    OptKind,
-    ParsedOpts,
-    SubcommandParser,
-    Subcommand,
-)
+from mojopt.command import Commandable
+from mojopt.default import reflection_default
+from mojopt.deserialize import MojOptDeserializable, Opt
+from mojopt.parser import Parser
 
 from hatlib.subcommands import HatSubcommand
 from hatlib.walk_dir import walk_dir
 from hatlib.project import get_project_name
 
 
-fn is_main(path: Path) -> Bool:
+def is_main(path: Path) -> Bool:
     return basename(path) == "main.mojo"
 
 
 @fieldwise_init
-struct Build(HatSubcommand):
-    comptime Name = "build"
+struct Build(Commandable, Defaultable, MojOptDeserializable, Writable):
+    comptime name = "build"
+
+    var debug: Opt[Bool, help="Create a debug build.", default_value=["False"]]
 
     @staticmethod
-    fn create_subcommand() raises -> Subcommand:
-        var parser = OptParser(
-            name=Self.Name,
-            description="""Build your project.""",
-        )
-        parser.add_opt(
-            OptConfig(
-                "debug",
-                OptKind.BoolLike,
-                description="Create a debug build.",
-                is_flag=True,
-                default_value=String("False"),
-            )
-        )
-        return Subcommand(parser^)
+    def description() -> String:
+        return """Build your project."""
 
-    @staticmethod
-    fn run(var opts: ParsedOpts, read help_message: String) raises:
-        if opts.get_bool("help"):
-            print(help_message)
-            exit(0)
+    def __init__(out self):
+        self = reflection_default[Self]()
 
-        var debug = opts.get_bool("debug")
+    def run(self) raises:
+        var debug = self.debug.value
         var debug_string = ""
         if debug:
             debug_string = (
