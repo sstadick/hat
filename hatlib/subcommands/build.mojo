@@ -1,58 +1,40 @@
-from os import mkdir, makedirs
-from os.path import basename
-from pathlib import Path
-from collections.deque import Deque
-from sys import exit, stderr
+from std.os import mkdir, makedirs
+from std.os.path import basename
+from std.pathlib import Path
+from std.collections.deque import Deque
+from std.sys import exit, stderr
 
 from hatlib.subprocess import POpenHandle
 
 from extramojo.io.buffered import BufferedReader
-from extramojo.cli.parser import (
-    OptParser,
-    OptConfig,
-    OptKind,
-    ParsedOpts,
-    SubcommandParser,
-    Subcommand,
-)
+from mojopt.command import Commandable
+from mojopt.default import reflection_default
+from mojopt.deserialize import MojOptDeserializable, Opt
 
 from hatlib.subcommands import HatSubcommand
 from hatlib.walk_dir import walk_dir
 from hatlib.project import get_project_name
 
 
-fn is_main(path: Path) -> Bool:
+def is_main(path: Path) -> Bool:
     return basename(path) == "main.mojo"
 
 
 @fieldwise_init
-struct Build(HatSubcommand):
-    comptime Name = "build"
+struct Build(Commandable, Defaultable, MojOptDeserializable, Writable):
+    comptime name = "build"
+
+    var debug: Opt[Bool, help="Create a debug build.", default_value=["False"]]
 
     @staticmethod
-    fn create_subcommand() raises -> Subcommand:
-        var parser = OptParser(
-            name=Self.Name,
-            description="""Build your project.""",
-        )
-        parser.add_opt(
-            OptConfig(
-                "debug",
-                OptKind.BoolLike,
-                description="Create a debug build.",
-                is_flag=True,
-                default_value=String("False"),
-            )
-        )
-        return Subcommand(parser^)
+    def description() -> String:
+        return """Build your project."""
 
-    @staticmethod
-    fn run(var opts: ParsedOpts, read help_message: String) raises:
-        if opts.get_bool("help"):
-            print(help_message)
-            exit(0)
+    def __init__(out self):
+        self = reflection_default[Self]()
 
-        var debug = opts.get_bool("debug")
+    def run(self) raises:
+        var debug = self.debug.value
         var debug_string = ""
         if debug:
             debug_string = (
@@ -101,11 +83,11 @@ struct Build(HatSubcommand):
         print("Running:", build_string, file=stderr)
         var handle = POpenHandle[True](build_string)
         for line in handle:
-            print(line)
-        print("Build complete:", location, file=stderr)
+            print(line, end="")
         var retcode = handle.close()
         if retcode != 0:
             raise Error("Build failed: " + build_string)
+        print("Build complete:", location, file=stderr)
 
         # var result = run[mimic_tty=True](build_string)
         # print(result.stdout)

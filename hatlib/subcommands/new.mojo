@@ -1,7 +1,8 @@
-from os import mkdir, makedirs
-from pathlib import Path
-from subprocess import run
-from sys import exit
+from std.os import mkdir, makedirs
+from std.pathlib import Path
+from std.subprocess import run
+from std.sys import exit
+
 
 from extramojo.io.buffered import BufferedReader
 from extramojo.cli.parser import (
@@ -12,6 +13,9 @@ from extramojo.cli.parser import (
     SubcommandParser,
     Subcommand,
 )
+from mojopt.command import Commandable
+from mojopt.default import reflection_default
+from mojopt.deserialize import MojOptDeserializable, Opt
 
 from hatlib.subcommands import HatSubcommand
 from hatlib.subprocess import POpenHandle
@@ -26,62 +30,60 @@ struct UserInfo(Copyable, Movable):
     var email: String
 
 
-fn pixi_install(project_dir: Path) raises:
-    print("running in", project_dir)
-    var handle = POpenHandle[True](
-        "cd "
-        + String(project_dir)
-        + " && pixi install --no-progress"
+def pixi_install(project_dir: Path) raises:
+    var cmd = String(
+        t"pixi install --no-progress --manifest-path {project_dir}/pixi.toml"
     )
+    var handle = POpenHandle[True](cmd)
     for line in handle:
-        print(line)
+        print(line, end="")
     var retcode = handle.close()
     if retcode != 0:
         raise Error("Failed to install deps.")
 
 
-fn get_user_and_email(project_dir: Path) raises -> UserInfo:
+def get_user_and_email(project_dir: Path) raises -> UserInfo:
     var email = run("git config --global user.email")
     var username = run("git config --global user.name")
     return UserInfo(username^, email^)
 
 
-fn pick_channel(nightly: Bool) -> String:
+def pick_channel(nightly: Bool) -> String:
     if not nightly:
         return STABLE_CHANNEL
     else:
         return NIGHTLY_CHANNEL
 
 
-fn create_lib_structure(project_dir: Path, name: String) raises:
+def create_lib_structure(project_dir: Path, name: String) raises:
     makedirs(project_dir / name, exist_ok=True)
     touch(project_dir / name / "__init__.mojo")
     var fh = open(project_dir / name / "lib.mojo", "w")
     fh.write_bytes(LIB_TEMPLATE.as_bytes())
 
 
-fn create_bin_structure(project_dir: Path) raises:
+def create_bin_structure(project_dir: Path) raises:
     var fh = open(project_dir / "main.mojo", "w")
     fh.write_bytes(MAIN_TEMPLATE.as_bytes())
 
 
-fn touch(path: Path) raises:
+def touch(path: Path) raises:
     _ = open(path, "a")
 
 
-fn write_gitignore(project_dir: Path) raises:
+def write_gitignore(project_dir: Path) raises:
     var fh = open(project_dir / ".gitignore", "w")
     fh.write_bytes(GITIGNORE_TEMPLATE.as_bytes())
 
 
-fn create_test_structure(project_dir: Path) raises:
+def create_test_structure(project_dir: Path) raises:
     mkdir(project_dir / "tests")
     var fh = open(project_dir / "tests" / "test_example.mojo", "w")
     fh.write_bytes(TEST_TEMPLATE.as_bytes())
 
 
 # user_info.username, user_info.email, channel, name
-fn write_pixi_toml(
+def write_pixi_toml(
     project_dir: Path,
     user_info: UserInfo,
     channel: String,
@@ -96,83 +98,63 @@ fn write_pixi_toml(
 
 
 @fieldwise_init
-struct New(HatSubcommand):
-    comptime Name = "new"
+struct New(Commandable, Defaultable, MojOptDeserializable, Writable):
+    comptime name = "new"
 
     @staticmethod
-    fn create_subcommand() raises -> Subcommand:
-        var parser = OptParser(
-            name=Self.Name,
-            description="""Create a new Mojo project.
-            For further documentation on Mojo project structure, see https://prefix-dev.github.io/pixi-build-backends/backends/pixi-build-mojo/#project-structure-examples.""",
-        )
-        parser.add_opt(
-            OptConfig(
-                "name",
-                OptKind.StringLike,
-                description=(
-                    "The name of the project, also used to create a directory."
-                ),
-            )
-        )
-        parser.add_opt(
-            OptConfig(
-                "location",
-                OptKind.StringLike,
-                description="Location to create the project",
-                default_value=String("."),
-            )
-        )
-        parser.add_opt(
-            OptConfig(
-                "nightly",
-                OptKind.BoolLike,
-                description="Create a project relying on latest nightly mojo.",
-                is_flag=True,
-                default_value=String("False"),
-            )
-        )
-        parser.add_opt(
-            OptConfig(
-                "lib",
-                OptKind.BoolLike,
-                description="Create a project structure for a mojo library.",
-                is_flag=True,
-                default_value=String("False"),
-            )
-        )
-        return Subcommand(parser^)
+    def description() -> String:
+        return """Create a new Mojo project.
+            For further documentation on Mojo project structure, see https://prefix-dev.github.io/pixi-build-backends/backends/pixi-build-mojo/#project-structure-examples."""
 
-    @staticmethod
-    fn run(var opts: ParsedOpts, read help_message: String) raises:
-        if opts.get_bool("help"):
-            print(help_message)
-            exit(0)
+    def __init__(out self):
+        self = reflection_default[Self]()
 
-        var name = opts.get_string("name")
-        var location = Path(opts.get_string("location"))
-        var nightly = opts.get_bool("nightly")
-        var lib = opts.get_bool("lib")
+    var project_name: Opt[
+        String,
+        short="n",
+        long="name",
+        help="The name of the project, also used to create a directory.",
+    ]
+    var location: Opt[
+        String,
+        short="l",
+        default_value=["."],
+        help="Location to create the project",
+    ]
+    var nightly: Opt[
+        Bool,
+        help="Create a project relying on latest nightly mojo.",
+        default_value=["False"],
+    ]
+    var lib: Opt[
+        Bool,
+        help="Create a project structure for a mojo library.",
+        default_value=["False"],
+    ]
 
-        var channel = pick_channel(nightly)
+    def run(self) raises:
+        var channel = pick_channel(self.nightly.value)
+        var location = Path(self.location.value)
 
         # Create the directory
-        var project_dir = location / name
-        mkdir(location / name)
-        if lib:
-            mkdir(project_dir / name)
+        var project_dir = location / self.project_name.value
+        mkdir(location / self.project_name.value)
+        if self.lib.value:
+            mkdir(project_dir / self.project_name.value)
 
         # Git init and find user info
-        _ = run("cd {} && git init".format(String(project_dir)))
+        _ = run("git init {}".format(String(project_dir)))
 
         var user_info = get_user_and_email(project_dir)
 
         # Fill in `pixi.toml` template
-        write_pixi_toml(project_dir, user_info, channel, name)
+        write_pixi_toml(
+            project_dir, user_info, channel, self.project_name.value
+        )
         write_gitignore(project_dir)
 
-        if lib:
-            create_lib_structure(project_dir, name)
+        if self.lib.value:
+            create_lib_structure(project_dir, self.project_name.value)
         else:
             create_bin_structure(project_dir)
         create_test_structure(project_dir)
@@ -221,22 +203,22 @@ mojo = "0.*"
 """
 
 comptime MAIN_TEMPLATE = """
-def main():
+def main() raises:
     print("🎩🪄🐇")
 """
 
 comptime LIB_TEMPLATE = """
-fn pull_rabbit() -> String:
+def pull_rabbit() -> String:
     return "🐇"
 """
 
 comptime TEST_TEMPLATE = """
-from testing import assert_equal, TestSuite
+from std.testing import assert_equal, TestSuite
 
-def test_example():
+def test_example() raises:
     assert_equal("🎩", "🎩")
 
-def main():
+def main() raises:
     TestSuite.discover_tests[__functions_in_module()]().run()
 """
 

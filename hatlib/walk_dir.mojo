@@ -1,17 +1,17 @@
 """Walk all files a directory recursively."""
-from collections import Deque
-from pathlib import Path
+from std.collections import Deque
+from std.pathlib import Path
 
 # TODO: make this an iterator
 
 
 @always_inline
-fn _no_filter(path: Path) -> Bool:
+def _no_filter(path: Path) -> Bool:
     return True
 
 
-fn walk_dir[
-    *, ignore_dot_files: Bool, filter: fn (Path) -> Bool = _no_filter
+def walk_dir[
+    *, ignore_dot_files: Bool, filter: fn(Path) -> Bool = _no_filter
 ](path: Path,) raises -> List[Path]:
     """Walk dirs and collect all files.
 
@@ -36,8 +36,7 @@ fn walk_dir[
         for path in check.listdir():
             var child = check / path
 
-            @parameter
-            if ignore_dot_files:
+            comptime if ignore_dot_files:
                 if String(path).startswith("."):
                     continue
 

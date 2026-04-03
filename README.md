@@ -44,8 +44,6 @@ Libraries and packages created this way can be relied on via git paths and don't
 
 ## Known issues
 
-- Some of the text-forwarding from running pixi commands gets odd re-formatting.
-
 ## Future directions
 
 - Reduce reliance on pixi the cli tool, add bindings to the core pixi libs and call them directly.
