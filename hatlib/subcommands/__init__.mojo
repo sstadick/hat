@@ -5,9 +5,9 @@ trait HatSubcommand:
     comptime Name: String
 
     @staticmethod
-    fn create_subcommand() raises -> Subcommand:
+    def create_subcommand() raises -> Subcommand:
         ...
 
     @staticmethod
-    fn run(var opts: ParsedOpts, read help_message: String) raises:
+    def run(var opts: ParsedOpts, read help_message: String) raises:
         ...

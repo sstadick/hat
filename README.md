@@ -5,9 +5,11 @@ A thin wrapper over pixi to make common mojo related task easier.
 ## Install
 
 ```
+pixi self-update --version 0.62.2 --no-release-note
+
 pixi global install \
   --channel conda-forge \
-  --channel https://conda.modular.com/max-nightly \
+  --channel https://conda.modular.com/max \
   --channel https://repo.prefix.dev/modular-community \
   --git https://github.com/sstadick/hat
 
@@ -19,10 +21,10 @@ export PATH="$HOME/.pixi/bin:$PATH"
 
 ```bash
 # Create a new binary project
-hat new --name mojo-grep --nightly
+hat new --name mojo-grep
 
 # Create a new lib project
-hat new --lib --nightly --name amazing-lib
+hat new --lib --name amazing-lib
 
 # Build project (defaults to release build)
 hat build 

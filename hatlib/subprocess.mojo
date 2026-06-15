@@ -90,7 +90,7 @@ struct POpenHandle[mimic_tty: Bool = False](Iterable):
     def read_all(self) raises -> String:
         """Reads all the data from the handle."""
         var len: Int = 0
-        var line = UnsafePointer[c_char, MutOrigin.external]()
+        var line: Optional[UnsafePointer[c_char, MutExternalOrigin]] = None
         var res = String()
         while True:
             var read = external_call["getline", Int](
@@ -100,10 +100,12 @@ struct POpenHandle[mimic_tty: Bool = False](Iterable):
                 break
             # Explicitly allowing shenanigans here because we want to capture colored output
             res += StringSlice(
-                unsafe_from_utf8=Span(ptr=line.bitcast[Byte](), length=read)
+                unsafe_from_utf8=Span(
+                    ptr=line.value().bitcast[Byte](), length=read
+                )
             )
         if line:
-            libc.free(line.bitcast[NoneType]())
+            libc.free(line.value().bitcast[NoneType]())
         return String(res.rstrip())
 
 
@@ -114,24 +116,22 @@ struct _LineIter[mut: Bool, //, mimic_tty: Bool, origin: Origin[mut=mut]](
     comptime Element = String
 
     var _len: Int
-    var _line: UnsafePointer[c_char, MutExternalOrigin]
+    var _line: Optional[UnsafePointer[c_char, MutExternalOrigin]]
     var _handle: Pointer[POpenHandle[Self.mimic_tty], Self.origin]
 
     def __init__(
         out self, handle: Pointer[POpenHandle[Self.mimic_tty], Self.origin]
     ):
-        self._line = UnsafePointer[c_char, MutExternalOrigin]()
+        self._line = None
         self._len = 0
         self._handle = handle
         self._try_getline()
 
     def __del__(deinit self):
-        libc.free(self._line.bitcast[NoneType]())
+        if self._line:
+            libc.free(self._line.value().bitcast[NoneType]())
         # The _POpenHandle that gave us this handle should close that.
         # pclose(self._handle)
-
-    def __has_next__(read self) -> Bool:
-        return self._len != -1
 
     def _try_getline(mut self):
         var read = external_call["getline", Int](
@@ -144,12 +144,15 @@ struct _LineIter[mut: Bool, //, mimic_tty: Bool, origin: Origin[mut=mut]](
         else:
             self._len = read  # Store the actual bytes read
 
-    def __next__(mut self) -> Self.Element:
+    def __next__(mut self) raises StopIteration -> Self.Element:
+        if self._len == -1:
+            raise StopIteration()
+
         # Current line data is in _line with length _len
         var ret = String(
             StringSlice(
                 unsafe_from_utf8=Span(
-                    ptr=self._line.bitcast[Byte](), length=self._len
+                    ptr=self._line.value().bitcast[Byte](), length=self._len
                 )
             )
         )
