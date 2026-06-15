@@ -177,28 +177,31 @@ name = "{}"
 version = "0.1.0"
 
 [package.build]
-backend = {{ name = "pixi-build-mojo", version = "0.*", channels = [
+backend = {{ name = "pixi-build-mojo", version = "<0.1.7", channels = [
     "https://prefix.dev/pixi-build-backends",
     "https://prefix.dev/conda-forge",
     "https://repo.prefix.dev/modular-community",
 ] }}
 
 [package.host-dependencies]
-mojo-compiler = "0.*"
+mojo-compiler = "=1.0.0b1"
 
 [package.build-dependencies]
-mojo-compiler = "0.*"
+mojo-compiler = "=1.0.0b1"
 
 [package.run-dependencies]
-mojo-compiler = "0.*"
+mojo-compiler = "=1.0.0b1"
 
 [tasks]
 r = "mojo run main.mojo"
 t = {{ cmd = "sh -c 'find ./tests -name test_*.mojo | xargs -I % mojo run -I . -D ASSERT=all %'" }}
 
+[target.linux-64.tasks]
+t = {{ cmd = "sh -c 'find ./tests -name test_*.mojo | xargs -I % mojo run --target-features=-avx512f,-avx512bw,-avx512cd,-avx512dq,-avx512vl,-avx512ifma,-avx512vbmi,-avx512vbmi2,-avx512vnni,-avx512bitalg,-avx512vpopcntdq,-avx512fp16,-avx512bf16 -I . -D ASSERT=all %'" }}
+
 
 [dependencies]
-mojo = "0.*"
+mojo = "=1.0.0b1"
 {} = {{ path = "." }}
 """
 
