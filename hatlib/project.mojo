@@ -22,8 +22,12 @@ def get_project_name(project_dir: Path) raises -> String:
         if line.startswith("[package]"):
             package_seen = True
         if package_seen and line.startswith("name"):
-            var quote_idx = line.find('"')
-            var name = line[byte=quote_idx + 1 : line.byte_length() - 1]
-            return String(name)
-    else:
-        raise Error("Unable to find project name in pixi.toml")
+            var parts = line.split('"')
+            if len(parts) >= 2:
+                return String(parts[1])
+    raise Error("Unable to find project name in pixi.toml")
+
+
+def get_module_name(project_name: String) -> String:
+    """Convert a Pixi package name to the Mojo module name used by Hat."""
+    return project_name.replace("-", "_")

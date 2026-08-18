@@ -1,11 +1,11 @@
 # hat 🎩
 
-A thin wrapper over pixi to make common mojo related task easier.
+A thin wrapper over Pixi that makes common Mojo project tasks easier.
 
 ## Install
 
 ```
-pixi self-update --version 0.62.2 --no-release-note
+pixi self-update --no-release-note
 
 pixi global install \
   --channel conda-forge \
@@ -26,6 +26,9 @@ hat new --name mojo-grep
 # Create a new lib project
 hat new --lib --name amazing-lib
 
+# Track the latest nightly compiler instead of stable Mojo 1.0.0
+hat new --nightly --name nightly-project
+
 # Build project (defaults to release build)
 hat build 
 
@@ -36,15 +39,12 @@ hat build --debug
 hat test
 ```
 
-Note that this sets up a fully functioning pixi project that relies on the ['pixi-build-mojo`](https://prefix-dev.github.io/pixi-build-backends/backends/pixi-build-mojo) backend. There is no magic here, you can look at the pixi.toml and fall back to running pixi / mojo commands as needed. 
+Generated projects use stable Mojo 1.0.0 by default, require Pixi 0.76 or newer, and rely on the [`pixi-build-mojo`](https://prefix-dev.github.io/pixi-build-backends/backends/pixi-build-mojo) backend. Library names such as `amazing-lib` are mapped to importable Mojo package names such as `amazing_lib`.
 
-
-Libraries and packages created this way can be relied on via git paths and don't technically need to be published on conda to be used by others. If you do wish to publish on [modular-community](https://github.com/modular/modular-community) you will need to create recipe.yml and go through the steps outlined in that repo. (Automatic creation of the recipe file is on the roadmap for this tool).
+Libraries and packages created this way can be used through Git paths and do not need to be published on Conda. To publish on [modular-community](https://github.com/modular/modular-community), create a `recipe.yaml` and follow that repository's publishing process. Automatic recipe generation remains on Hat's roadmap.
 
 > [!Warning]
-> Since `hat` relies on the pixi.toml, and some tasks defined there, changing any of the pre-defined tasks may break `hat`.
-
-## Known issues
+> Since `hat` relies on `pixi.toml` and its generated `t` task, changing that task may break `hat test`.
 
 ## Future directions
 
