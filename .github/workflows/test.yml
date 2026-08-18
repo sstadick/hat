@@ -8,15 +8,15 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v4
 
-            - name: Install pixi CLI
-              run: |
-                  curl -fsSL https://pixi.sh/install.sh | sh
-                  export PATH="/home/runner/.pixi/bin:$PATH"
-                  pixi self-update --version 0.62.2 --no-release-note
+            - name: Install Pixi
+              uses: prefix-dev/setup-pixi@v0.10.1
+              with:
+                  pixi-version: v0.76.2
+                  cache: true
+                  locked: true
 
             - name: Install dependencies and build
               run: |
-                  export PATH="/home/runner/.pixi/bin:$PATH"
                   pixi global install \
                       --channel conda-forge \
                       --channel https://conda.modular.com/max \
@@ -24,26 +24,35 @@ jobs:
                       --path .
 
             - name: Run basic test - hat --help
-              run: |
-                  export PATH="/home/runner/.pixi/bin:$PATH"
-                  hat --help
+              run: hat --help
 
-            - name: Run basic test - hat test 
-              run: |
-                  export PATH="/home/runner/.pixi/bin:$PATH"
-                  hat test
+            - name: Run basic test - hat test
+              run: hat test
 
             - name: Run basic test - hat build
-              run: |
-                  export PATH="/home/runner/.pixi/bin:$PATH"
-                  hat build
+              run: hat build
 
             - name: Configure git for testing
               run: |
                   git config --global user.email "ci@example.com"
                   git config --global user.name "CI Bot"
 
-            - name: Run end to end test
+            - name: Run binary project end-to-end test
               run: |
-                  export PATH="/home/runner/.pixi/bin:$PATH"
-                  hat new --name example && cd example && hat build && hat test && ./target/release/example
+                  smoke_root="$(mktemp -d)"
+                  cd "$smoke_root"
+                  hat new --name example
+                  cd example
+                  hat build
+                  hat test
+                  ./target/release/example
+
+            - name: Run library project end-to-end test
+              run: |
+                  smoke_root="$(mktemp -d)"
+                  cd "$smoke_root"
+                  hat new --lib --name example-lib
+                  cd example-lib
+                  hat build
+                  hat test
+                  test -f target/release/example_lib.mojoc

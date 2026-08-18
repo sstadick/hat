@@ -1,27 +1,17 @@
 from std.os import mkdir, makedirs
 from std.pathlib import Path
 from std.subprocess import run
-from std.sys import exit
 
-
-from extramojo.io.buffered import BufferedReader
-from extramojo.cli.parser import (
-    OptParser,
-    OptConfig,
-    OptKind,
-    ParsedOpts,
-    SubcommandParser,
-    Subcommand,
-)
 from mojopt.command import Commandable
 from mojopt.default import reflection_default
 from mojopt.deserialize import MojOptDeserializable, Opt
 
-from hatlib.subcommands import HatSubcommand
+from hatlib.project import get_module_name
 from hatlib.subprocess import POpenHandle
 
 comptime NIGHTLY_CHANNEL = "https://conda.modular.com/max-nightly"
 comptime STABLE_CHANNEL = "https://conda.modular.com/max"
+comptime STABLE_MOJO_VERSION = "=1.0.0"
 
 
 @fieldwise_init
@@ -31,9 +21,7 @@ struct UserInfo(Copyable, Movable):
 
 
 def pixi_install(project_dir: Path) raises:
-    var cmd = String(
-        t"pixi install --no-progress --manifest-path {project_dir}/pixi.toml"
-    )
+    var cmd = String(t"pixi install --no-progress --manifest-path {project_dir}/pixi.toml")
     var handle = POpenHandle[True](cmd)
     for line in handle:
         print(line, end="")
@@ -43,8 +31,9 @@ def pixi_install(project_dir: Path) raises:
 
 
 def get_user_and_email(project_dir: Path) raises -> UserInfo:
-    var email = run("git config --global user.email")
-    var username = run("git config --global user.name")
+    var git_dir = String(project_dir)
+    var email = run("git -C {} config user.email".format(git_dir))
+    var username = run("git -C {} config user.name".format(git_dir))
     return UserInfo(username^, email^)
 
 
@@ -55,10 +44,16 @@ def pick_channel(nightly: Bool) -> String:
         return NIGHTLY_CHANNEL
 
 
-def create_lib_structure(project_dir: Path, name: String) raises:
-    makedirs(project_dir / name, exist_ok=True)
-    touch(project_dir / name / "__init__.mojo")
-    var fh = open(project_dir / name / "lib.mojo", "w")
+def pick_mojo_version(nightly: Bool) -> String:
+    if nightly:
+        return "*"
+    return STABLE_MOJO_VERSION
+
+
+def create_lib_structure(project_dir: Path, module_name: String) raises:
+    makedirs(project_dir / module_name, exist_ok=True)
+    touch(project_dir / module_name / "__init__.mojo")
+    var fh = open(project_dir / module_name / "lib.mojo", "w")
     fh.write_bytes(LIB_TEMPLATE.as_bytes())
 
 
@@ -76,21 +71,46 @@ def write_gitignore(project_dir: Path) raises:
     fh.write_bytes(GITIGNORE_TEMPLATE.as_bytes())
 
 
-def create_test_structure(project_dir: Path) raises:
+def create_test_structure(project_dir: Path, module_name: String, is_lib: Bool) raises:
     mkdir(project_dir / "tests")
     var fh = open(project_dir / "tests" / "test_example.mojo", "w")
-    fh.write_bytes(TEST_TEMPLATE.as_bytes())
+    if is_lib:
+        var test_contents = LIB_TEST_TEMPLATE.format(module_name)
+        fh.write_bytes(test_contents.as_bytes())
+    else:
+        fh.write_bytes(BIN_TEST_TEMPLATE.as_bytes())
 
 
-# user_info.username, user_info.email, channel, name
 def write_pixi_toml(
     project_dir: Path,
     user_info: UserInfo,
     channel: String,
+    mojo_version: String,
     project_name: String,
+    module_name: String,
+    is_lib: Bool,
 ) raises:
+    var build_config: String
+    var run_task: String
+    if is_lib:
+        build_config = LIB_BUILD_CONFIG_TEMPLATE.format(module_name, module_name)
+        run_task = "# Library projects do not define a run task."
+    else:
+        build_config = BIN_BUILD_CONFIG_TEMPLATE.format(project_name)
+        run_task = RUN_TASK_TEMPLATE
+
     var pixi_contents = PIXI_TEMPLATE.format(
-        user_info.username, user_info.email, channel, project_name, project_name
+        user_info.username,
+        user_info.email,
+        channel,
+        project_name,
+        build_config,
+        mojo_version,
+        mojo_version,
+        mojo_version,
+        run_task,
+        mojo_version,
+        project_name,
     )
 
     var fh = open(project_dir / "pixi.toml", "w")
@@ -123,113 +143,144 @@ struct New(Commandable, Defaultable, MojOptDeserializable, Writable):
     ]
     var nightly: Opt[
         Bool,
-        help="Create a project relying on latest nightly mojo.",
+        help="Create a project relying on the latest nightly Mojo.",
         default_value=["False"],
     ]
     var lib: Opt[
         Bool,
-        help="Create a project structure for a mojo library.",
+        help="Create a project structure for a Mojo library.",
         default_value=["False"],
     ]
 
     def run(self) raises:
         var channel = pick_channel(self.nightly.value)
+        var mojo_version = pick_mojo_version(self.nightly.value)
         var location = Path(self.location.value)
+        var project_name = self.project_name.value
+        var module_name = get_module_name(project_name)
 
         # Create the directory
-        var project_dir = location / self.project_name.value
-        mkdir(location / self.project_name.value)
-        if self.lib.value:
-            mkdir(project_dir / self.project_name.value)
+        var project_dir = location / project_name
+        mkdir(project_dir)
 
         # Git init and find user info
-        _ = run("git init {}".format(String(project_dir)))
+        _ = run("git init -b main {}".format(String(project_dir)))
 
         var user_info = get_user_and_email(project_dir)
 
         # Fill in `pixi.toml` template
         write_pixi_toml(
-            project_dir, user_info, channel, self.project_name.value
+            project_dir,
+            user_info,
+            channel,
+            mojo_version,
+            project_name,
+            module_name,
+            self.lib.value,
         )
         write_gitignore(project_dir)
 
         if self.lib.value:
-            create_lib_structure(project_dir, self.project_name.value)
+            create_lib_structure(project_dir, module_name)
         else:
             create_bin_structure(project_dir)
-        create_test_structure(project_dir)
+        create_test_structure(project_dir, module_name, self.lib.value)
         pixi_install(project_dir)
 
 
-comptime PIXI_TEMPLATE = """
-[workspace]
+comptime PIXI_TEMPLATE = """[workspace]
 authors = ["{} <{}>"]
 channels = [
     "https://prefix.dev/conda-forge",
     "{}",
     "https://repo.prefix.dev/modular-community",
 ]
-platforms = ["linux-64", "osx-arm64"]
+platforms = ["linux-64", "linux-aarch64", "osx-arm64"]
 preview = ["pixi-build"]
+requires-pixi = ">=0.76"
 
 [package]
 name = "{}"
 version = "0.1.0"
 
 [package.build]
-backend = {{ name = "pixi-build-mojo", version = "<0.1.7", channels = [
+backend = {{ name = "pixi-build-mojo", version = "0.*", channels = [
     "https://prefix.dev/pixi-build-backends",
     "https://prefix.dev/conda-forge",
-    "https://repo.prefix.dev/modular-community",
 ] }}
+{}
 
 [package.host-dependencies]
-mojo-compiler = "=1.0.0b1"
+mojo-compiler = "{}"
 
 [package.build-dependencies]
-mojo-compiler = "=1.0.0b1"
+mojo-compiler = "{}"
 
 [package.run-dependencies]
-mojo-compiler = "=1.0.0b1"
+mojo-compiler = "{}"
 
 [tasks]
-r = "mojo run main.mojo"
+{}
 t = {{ cmd = "sh -c 'find ./tests -name test_*.mojo | xargs -I % mojo run -I . -D ASSERT=all %'" }}
+format = "mojo format --line-length 100 ."
 
 [target.linux-64.tasks]
+# Mojo 1.0 may select AVX-512 on CI runners whose hosts do not expose it.
 t = {{ cmd = "sh -c 'find ./tests -name test_*.mojo | xargs -I % mojo run --target-features=-avx512f,-avx512bw,-avx512cd,-avx512dq,-avx512vl,-avx512ifma,-avx512vbmi,-avx512vbmi2,-avx512vnni,-avx512bitalg,-avx512vpopcntdq,-avx512fp16,-avx512bf16 -I . -D ASSERT=all %'" }}
 
-
 [dependencies]
-mojo = "=1.0.0b1"
+mojo = "{}"
 {} = {{ path = "." }}
 """
 
-comptime MAIN_TEMPLATE = """
-def main() raises:
+comptime BIN_BUILD_CONFIG_TEMPLATE = (
+    '[[package.build.config.bins]]\nname = "{}"\npath = "main.mojo"'
+)
+
+comptime LIB_BUILD_CONFIG_TEMPLATE = '[package.build.config.pkg]\nname = "{}"\npath = "{}"'
+
+comptime RUN_TASK_TEMPLATE = 'r = "mojo run main.mojo"'
+
+comptime MAIN_TEMPLATE = """def main() raises:
     print("🎩🪄🐇")
 """
 
-comptime LIB_TEMPLATE = """
-def pull_rabbit() -> String:
+comptime LIB_TEMPLATE = """def pull_rabbit() -> String:
     return "🐇"
 """
 
-comptime TEST_TEMPLATE = """
-from std.testing import assert_equal, TestSuite
+comptime BIN_TEST_TEMPLATE = """from std.testing import assert_equal, TestSuite
+
 
 def test_example() raises:
     assert_equal("🎩", "🎩")
+
 
 def main() raises:
     TestSuite.discover_tests[__functions_in_module()]().run()
 """
 
-comptime GITIGNORE_TEMPLATE = """
-# pixi environments
-.pixi/*
+comptime LIB_TEST_TEMPLATE = """from std.testing import assert_equal, TestSuite
+
+from {}.lib import pull_rabbit
+
+
+def test_pull_rabbit() raises:
+    assert_equal(pull_rabbit(), "🐇")
+
+
+def main() raises:
+    TestSuite.discover_tests[__functions_in_module()]().run()
+"""
+
+comptime GITIGNORE_TEMPLATE = """# pixi environments
+.pixi/
 !.pixi/config.toml
 
 # hat
-target/*
+target/
+
+# Mojo packages
+*.mojoc
+*.mojopkg
 """

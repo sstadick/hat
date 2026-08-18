@@ -5,42 +5,42 @@ channels = [
     "https://conda.modular.com/max",
     "https://repo.prefix.dev/modular-community",
 ]
-platforms = ["linux-64", "osx-arm64"]
+platforms = ["linux-64", "linux-aarch64", "osx-arm64"]
 preview = ["pixi-build"]
+requires-pixi = ">=0.76"
 
 [package]
 name = "hat"
-version = "0.3.0"
+version = "0.4.0"
 license = "MIT"
 description = "Helper utility for working with Mojo projects."
 
 [package.build]
-backend = { name = "pixi-build-mojo", version = "<0.1.7", channels = [
+backend = { name = "pixi-build-mojo", version = "0.*", channels = [
     "https://prefix.dev/pixi-build-backends",
     "https://prefix.dev/conda-forge",
-    "https://repo.prefix.dev/modular-community",
 ] }
 
 [package.host-dependencies]
-mojo-compiler = "=1.0.0b1"
+mojo-compiler = "=1.0.0"
 
 [package.build-dependencies]
-mojo-compiler = "=1.0.0b1"
-extramojo = "=0.22.0"
-mojopt = { git = "https://github.com/sstadick/mojopt", rev = "693bb40657ca94b56666eced43628a4ba58407cb" }
+mojo-compiler = "=1.0.0"
+mojopt = { git = "https://github.com/sstadick/mojopt", rev = "89fdc2c1354bf5bbb253e66736be639bfa35be50" }
 
 [package.run-dependencies]
-mojo-compiler = "=1.0.0b1"
+mojo-compiler = "=1.0.0"
 
 [tasks]
 r = "mojo run main.mojo"
 t = { cmd = "sh -c 'find ./tests -name test_*.mojo | xargs -I % mojo run -I . -D ASSERT=all %'" }
+format = "mojo format --line-length 100 ."
 
 [target.linux-64.tasks]
+# Mojo 1.0 may select AVX-512 on CI runners whose hosts do not expose it.
 t = { cmd = "sh -c 'find ./tests -name test_*.mojo | xargs -I % mojo run --target-features=-avx512f,-avx512bw,-avx512cd,-avx512dq,-avx512vl,-avx512ifma,-avx512vbmi,-avx512vbmi2,-avx512vnni,-avx512bitalg,-avx512vpopcntdq,-avx512fp16,-avx512bf16 -I . -D ASSERT=all %'" }
 
 [dependencies]
-mojo = "=1.0.0b1"
-extramojo = "=0.22.0"
-mojopt = { git = "https://github.com/sstadick/mojopt", rev = "693bb40657ca94b56666eced43628a4ba58407cb" }
+mojo = "=1.0.0"
+mojopt = { git = "https://github.com/sstadick/mojopt", rev = "89fdc2c1354bf5bbb253e66736be639bfa35be50" }
 #hat = { path = "." }

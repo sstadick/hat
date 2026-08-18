@@ -1,6 +1,10 @@
 # pixi environments
-.pixi/*
+.pixi/
 !.pixi/config.toml
 
 # hat
-target/*
+target/
+
+# Mojo packages
+*.mojoc
+*.mojopkg

@@ -8,7 +8,6 @@ import std.sys._libc as libc
 from std.sys._libc import FILE_ptr, pclose, popen
 from std.ffi import c_char, external_call
 from std.sys.info import CompilationTarget
-from std.memory import Span
 
 
 # TODO: handle this but with the iterator now
@@ -71,7 +70,7 @@ struct POpenHandle[mimic_tty: Bool = False](Iterable):
         if not self._handle:
             raise Error("unable to execute the command `", cmd, "`")
 
-    def __del__(deinit self):
+    def __deinit__(deinit self):
         """Closes the handle if not already closed."""
         if not self._closed:
             _ = pclose(self._handle)
@@ -90,7 +89,7 @@ struct POpenHandle[mimic_tty: Bool = False](Iterable):
     def read_all(self) raises -> String:
         """Reads all the data from the handle."""
         var len: Int = 0
-        var line: Optional[UnsafePointer[c_char, MutExternalOrigin]] = None
+        var line: Optional[Pointer[c_char, MutUntrackedOrigin]] = None
         var res = String()
         while True:
             var read = external_call["getline", Int](
@@ -100,36 +99,30 @@ struct POpenHandle[mimic_tty: Bool = False](Iterable):
                 break
             # Explicitly allowing shenanigans here because we want to capture colored output
             res += StringSlice(
-                unsafe_from_utf8=Span(
-                    ptr=line.value().bitcast[Byte](), length=read
-                )
+                unsafe_from_utf8=Span(unsafe_ptr=line.value().unsafe_bitcast[Byte](), length=read)
             )
         if line:
-            libc.free(line.value().bitcast[NoneType]())
+            libc.free(line.value().unsafe_bitcast[NoneType]())
         return String(res.rstrip())
 
 
-struct _LineIter[mut: Bool, //, mimic_tty: Bool, origin: Origin[mut=mut]](
-    Iterator
-):
+struct _LineIter[mut: Bool, //, mimic_tty: Bool, origin: Origin[mut=mut]](Iterator):
     # TODO: with new iterator return a reference to the bytes, or just anything that doesn't copy
     comptime Element = String
 
     var _len: Int
-    var _line: Optional[UnsafePointer[c_char, MutExternalOrigin]]
+    var _line: Optional[Pointer[c_char, MutUntrackedOrigin]]
     var _handle: Pointer[POpenHandle[Self.mimic_tty], Self.origin]
 
-    def __init__(
-        out self, handle: Pointer[POpenHandle[Self.mimic_tty], Self.origin]
-    ):
+    def __init__(out self, handle: Pointer[POpenHandle[Self.mimic_tty], Self.origin]):
         self._line = None
         self._len = 0
         self._handle = handle
         self._try_getline()
 
-    def __del__(deinit self):
+    def __deinit__(deinit self):
         if self._line:
-            libc.free(self._line.value().bitcast[NoneType]())
+            libc.free(self._line.value().unsafe_bitcast[NoneType]())
         # The _POpenHandle that gave us this handle should close that.
         # pclose(self._handle)
 
@@ -152,7 +145,8 @@ struct _LineIter[mut: Bool, //, mimic_tty: Bool, origin: Origin[mut=mut]](
         var ret = String(
             StringSlice(
                 unsafe_from_utf8=Span(
-                    ptr=self._line.value().bitcast[Byte](), length=self._len
+                    unsafe_ptr=self._line.value().unsafe_bitcast[Byte](),
+                    length=self._len,
                 )
             )
         )
@@ -165,9 +159,7 @@ struct _LineIter[mut: Bool, //, mimic_tty: Bool, origin: Origin[mut=mut]](
 
 def run[
     mimic_tty: Bool = False
-](
-    cmd: String, capture_stderr_to_stdout: Bool = True
-) raises -> CompletedProcess:
+](cmd: String, capture_stderr_to_stdout: Bool = True) raises -> CompletedProcess:
     """Runs the specified command and returns the result.
 
     Args:
@@ -177,9 +169,7 @@ def run[
     Returns:
         A CompletedProcess with stdout and returncode.
     """
-    var hdl = POpenHandle[mimic_tty](
-        cmd, capture_stderr_to_stdout=capture_stderr_to_stdout
-    )
+    var hdl = POpenHandle[mimic_tty](cmd, capture_stderr_to_stdout=capture_stderr_to_stdout)
     var output = hdl.read_all()
     var code = hdl.close()
     return CompletedProcess(output, code)

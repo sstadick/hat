@@ -1,19 +1,16 @@
-from std.os import mkdir, makedirs
+from std.os import makedirs
 from std.os.path import basename
 from std.pathlib import Path
-from std.collections.deque import Deque
-from std.sys import exit, stderr
+from std.sys import stderr
 
 from hatlib.subprocess import POpenHandle
 
-from extramojo.io.buffered import BufferedReader
 from mojopt.command import Commandable
 from mojopt.default import reflection_default
 from mojopt.deserialize import MojOptDeserializable, Opt
 
-from hatlib.subcommands import HatSubcommand
 from hatlib.walk_dir import walk_dir
-from hatlib.project import get_project_name
+from hatlib.project import get_module_name, get_project_name
 
 
 def is_main(path: Path) -> Bool:
@@ -37,11 +34,10 @@ struct Build(Commandable, Defaultable, MojOptDeserializable, Writable):
         var debug = self.debug.value
         var debug_string = ""
         if debug:
-            debug_string = (
-                "--debug-level full --optimization-level 0 -D ASSERT=all"
-            )
+            debug_string = "--debug-level full --optimization-level 0 -D ASSERT=all"
 
         var project_name = get_project_name(Path("."))
+        var module_name = get_module_name(project_name)
 
         var mains = walk_dir[ignore_dot_files=True, filter=is_main](".")
 
@@ -56,29 +52,23 @@ struct Build(Commandable, Defaultable, MojOptDeserializable, Writable):
             if len(mains) != 1:
                 raise Error("Conflicting main.mojo files found.")
             var binary = build_dir / project_name
-            build_string = (
-                "pixi run --no-progress mojo build {} -o {} {}".format(
-                    debug_string, String(binary), String(mains[0])
-                )
+            build_string = "pixi run --no-progress mojo build {} -o {} {}".format(
+                debug_string, String(binary), String(mains[0])
             )
             location = String(binary)
         else:
-            var pkg = build_dir / "{}.mojopkg".format(project_name)
+            var pkg = build_dir / "{}.mojoc".format(module_name)
             location = String(pkg)
-            if (Path(".") / project_name).exists():
-                build_string = (
-                    "pixi run --no-progress mojo package -o {} {}".format(
-                        String(pkg), project_name
-                    )
+            if (Path(".") / module_name).exists():
+                build_string = "pixi run --no-progress mojo precompile {} -o {}".format(
+                    module_name, String(pkg)
                 )
             elif (Path(".") / "src").exists():
-                build_string = (
-                    "pixi run --no-progress mojo package -o {} src".format(
-                        String(pkg),
-                    )
+                build_string = "pixi run --no-progress mojo precompile src -o {}".format(
+                    String(pkg)
                 )
             else:
-                raise Error("No valid mojopkg project structure found.")
+                raise Error("No valid Mojo package project structure found.")
 
         print("Running:", build_string, file=stderr)
         var handle = POpenHandle[True](build_string)
