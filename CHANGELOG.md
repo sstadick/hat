@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## v0.5.0
+
+- chore: update Hat and generated stable projects to Mojo 1.1.0
+- chore: pin MojOpt 0.5.0, which supports Mojo 1.1.0
+- fix: use the current C-string span and pointer APIs for subprocess calls
+- chore: stop generating the obsolete `.mojopkg` ignore entry
+- test: validate project generation, subprocesses, and end-to-end builds on all supported platforms
+
 ## v0.4.0
 
 - chore: update Hat and generated stable projects to Mojo 1.0.0
