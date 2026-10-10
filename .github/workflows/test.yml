@@ -2,7 +2,11 @@ name: Test
 on: [push, pull_request]
 jobs:
     test:
-        runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+            matrix:
+                os: [ubuntu-latest, ubuntu-24.04-arm, macos-14]
+        runs-on: ${{ matrix.os }}
 
         steps:
             - name: Checkout code
@@ -11,9 +15,14 @@ jobs:
             - name: Install Pixi
               uses: prefix-dev/setup-pixi@v0.10.1
               with:
-                  pixi-version: v0.76.2
+                  pixi-version: v0.80.0
                   cache: true
                   locked: true
+
+            - name: Check formatting
+              run: |
+                  pixi run format
+                  git diff --exit-code
 
             - name: Install dependencies and build
               run: |
@@ -46,6 +55,8 @@ jobs:
                   hat build
                   hat test
                   ./target/release/example
+                  hat build --debug
+                  ./target/debug/example
 
             - name: Run library project end-to-end test
               run: |
@@ -56,3 +67,5 @@ jobs:
                   hat build
                   hat test
                   test -f target/release/example_lib.mojoc
+                  hat build --debug
+                  test -f target/debug/example_lib.mojoc

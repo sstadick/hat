@@ -26,7 +26,7 @@ hat new --name mojo-grep
 # Create a new lib project
 hat new --lib --name amazing-lib
 
-# Track the latest nightly compiler instead of stable Mojo 1.0.0
+# Track the latest nightly compiler instead of stable Mojo 1.1.0
 hat new --nightly --name nightly-project
 
 # Build project (defaults to release build)
@@ -39,7 +39,7 @@ hat build --debug
 hat test
 ```
 
-Generated projects use stable Mojo 1.0.0 by default, require Pixi 0.76 or newer, and rely on the [`pixi-build-mojo`](https://prefix-dev.github.io/pixi-build-backends/backends/pixi-build-mojo) backend. Library names such as `amazing-lib` are mapped to importable Mojo package names such as `amazing_lib`.
+Hat 0.5.0 and generated projects use stable Mojo 1.1.0 by default, require Pixi 0.76 or newer, and rely on the [`pixi-build-mojo`](https://prefix-dev.github.io/pixi-build-backends/backends/pixi-build-mojo) backend. Library names such as `amazing-lib` are mapped to importable Mojo package names such as `amazing_lib`.
 
 Libraries and packages created this way can be used through Git paths and do not need to be published on Conda. To publish on [modular-community](https://github.com/modular/modular-community), create a `recipe.yaml` and follow that repository's publishing process. Automatic recipe generation remains on Hat's roadmap.
 

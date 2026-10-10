@@ -11,7 +11,7 @@ from hatlib.subprocess import POpenHandle
 
 comptime NIGHTLY_CHANNEL = "https://conda.modular.com/max-nightly"
 comptime STABLE_CHANNEL = "https://conda.modular.com/max"
-comptime STABLE_MOJO_VERSION = "=1.0.0"
+comptime STABLE_MOJO_VERSION = "=1.1.0"
 
 
 @fieldwise_init
@@ -225,7 +225,7 @@ t = {{ cmd = "sh -c 'find ./tests -name test_*.mojo | xargs -I % mojo run -I . -
 format = "mojo format --line-length 100 ."
 
 [target.linux-64.tasks]
-# Mojo 1.0 may select AVX-512 on CI runners whose hosts do not expose it.
+# Keep test runs compatible with CI hosts that do not expose AVX-512.
 t = {{ cmd = "sh -c 'find ./tests -name test_*.mojo | xargs -I % mojo run --target-features=-avx512f,-avx512bw,-avx512cd,-avx512dq,-avx512vl,-avx512ifma,-avx512vbmi,-avx512vbmi2,-avx512vnni,-avx512bitalg,-avx512vpopcntdq,-avx512fp16,-avx512bf16 -I . -D ASSERT=all %'" }}
 
 [dependencies]
@@ -282,5 +282,4 @@ target/
 
 # Mojo packages
 *.mojoc
-*.mojopkg
 """

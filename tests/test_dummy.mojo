@@ -17,7 +17,7 @@ def test_project_names() raises:
 def test_project_channels() raises:
     assert_equal(pick_channel(False), "https://conda.modular.com/max")
     assert_equal(pick_channel(True), "https://conda.modular.com/max-nightly")
-    assert_equal(pick_mojo_version(False), "=1.0.0")
+    assert_equal(pick_mojo_version(False), "=1.1.0")
     assert_equal(pick_mojo_version(True), "*")
 
 
