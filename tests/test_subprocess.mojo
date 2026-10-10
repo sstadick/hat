@@ -1,4 +1,4 @@
-from std.testing import assert_equal, assert_raises, TestSuite
+from std.testing import assert_equal, assert_raises, assert_true, TestSuite
 
 from hatlib.subprocess import POpenHandle, run
 
@@ -37,8 +37,9 @@ def test_empty_output() raises:
 
 
 def test_tty_output() raises:
-    var result = run[mimic_tty=True]("printf 'hat-tty\\n'")
-    assert_equal(result.stdout, "hat-tty")
+    var result = run[mimic_tty=True]("sh -c \"test -t 1 && printf 'hat-tty\\n'\"")
+    # macOS script can echo an EOF control sequence before the child output in CI.
+    assert_true(result.stdout.endswith("hat-tty"))
     assert_equal(result.returncode, 0)
 
 
