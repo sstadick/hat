@@ -28,7 +28,7 @@ jobs:
               run: |
                   pixi global install \
                       --channel conda-forge \
-                      --channel https://conda.modular.com/max \
+                      --channel https://conda.modular.com/max-nightly \
                       --channel https://repo.prefix.dev/modular-community \
                       --path .
 

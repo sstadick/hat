@@ -17,6 +17,23 @@ pixi global install \
 export PATH="$HOME/.pixi/bin:$PATH"
 ```
 
+### Nightly source checkout
+
+The `nightly` branch builds Hat with **Mojo 1.3.0.dev2026110505** from
+`https://conda.modular.com/max-nightly` and pins a compatible mojopt revision.
+From this branch, use `pixi install --locked` for development. To install it:
+
+```bash
+pixi global install \
+  --channel conda-forge \
+  --channel https://conda.modular.com/max-nightly \
+  --channel https://repo.prefix.dev/modular-community \
+  --path .
+```
+
+Generated projects still default to stable Mojo 1.1.0; use `hat new --nightly`
+to select a nightly compiler for a new project.
+
 ## Usage
 
 ```bash
