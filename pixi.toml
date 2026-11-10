@@ -22,14 +22,14 @@ backend = { name = "pixi-build-mojo", version = "0.*", channels = [
 ] }
 
 [package.host-dependencies]
-mojo-compiler = "=1.1.0"
+mojo-compiler = "=1.2.0"
 
 [package.build-dependencies]
-mojo-compiler = "=1.1.0"
-mojopt = { git = "https://github.com/sstadick/mojopt", rev = "cc0ce273cc28dbcc76d9c62d2226c187e24d2506" } # v0.5.0
+mojo-compiler = "=1.2.0"
+mojopt = { git = "https://github.com/sstadick/mojopt", rev = "de6f04b98b2075e9bc05459c5864e3d249534129" }
 
 [package.run-dependencies]
-mojo-compiler = "=1.1.0"
+mojo-compiler = "=1.2.0"
 
 [tasks]
 r = "mojo run main.mojo"
@@ -41,6 +41,6 @@ format = "mojo format --line-length 100 ."
 t = { cmd = "sh -c 'find ./tests -name test_*.mojo | xargs -I % mojo run --target-features=-avx512f,-avx512bw,-avx512cd,-avx512dq,-avx512vl,-avx512ifma,-avx512vbmi,-avx512vbmi2,-avx512vnni,-avx512bitalg,-avx512vpopcntdq,-avx512fp16,-avx512bf16 -I . -D ASSERT=all %'" }
 
 [dependencies]
-mojo = "=1.1.0"
-mojopt = { git = "https://github.com/sstadick/mojopt", rev = "cc0ce273cc28dbcc76d9c62d2226c187e24d2506" } # v0.5.0
+mojo = "=1.2.0"
+mojopt = { git = "https://github.com/sstadick/mojopt", rev = "de6f04b98b2075e9bc05459c5864e3d249534129" }
 #hat = { path = "." }

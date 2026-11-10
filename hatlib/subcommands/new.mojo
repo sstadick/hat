@@ -11,7 +11,7 @@ from hatlib.subprocess import POpenHandle
 
 comptime NIGHTLY_CHANNEL = "https://conda.modular.com/max-nightly"
 comptime STABLE_CHANNEL = "https://conda.modular.com/max"
-comptime STABLE_MOJO_VERSION = "=1.1.0"
+comptime STABLE_MOJO_VERSION = "=1.2.0"
 
 
 @fieldwise_init
