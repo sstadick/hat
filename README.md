@@ -19,9 +19,10 @@ export PATH="$HOME/.pixi/bin:$PATH"
 
 ### Nightly source checkout
 
-The `nightly` branch builds Hat with **Mojo 1.3.0.dev2026110805** from
-`https://conda.modular.com/max-nightly` and pins mojopt to
-[`c5de7c2ee2dfc5dd611851050b8898f2f8ce2dc8`](https://github.com/sstadick/mojopt/commit/c5de7c2ee2dfc5dd611851050b8898f2f8ce2dc8).
+The `nightly` branch builds Hat with **Mojo 1.3.0.dev2026111005** from
+`https://conda.modular.com/max-nightly` (`Mojo 1.3.0.dev2026111005 (5fb790b6)`)
+and pins mojopt to
+[`06900e3602910ef3593de89bcbe299bf8c3caba9`](https://github.com/sstadick/mojopt/commit/06900e3602910ef3593de89bcbe299bf8c3caba9).
 That dependency is published on mojopt's nightly branch, not yet released on
 stable; promotion depends on [mojopt PR #11](https://github.com/sstadick/mojopt/pull/11)
 landing and the final pins being retested.
